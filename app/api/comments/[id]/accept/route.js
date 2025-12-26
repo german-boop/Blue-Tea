@@ -1,0 +1,30 @@
+import connectToDB from "@/db/db"
+import commentModel from "@/model/comment"
+import { authAdmin } from "@/utils/auth"
+import { isValidObjectId } from "mongoose"
+import { NextResponse } from "next/server"
+
+export async function PUT(req,{params}) {
+    try {
+        connectToDB()
+        const admin = await authAdmin()
+        if (!admin) throw new Error("This api Protected")
+
+        const { id } = await params;
+        if (!isValidObjectId(id)) {
+            return NextResponse.json({ message: "Invalid ID" }, { status: 422 });
+        }
+        const comment = await commentModel.findById(id)
+
+        await commentModel.findByIdAndUpdate(id,
+            { isAccept: !comment.isAccept }
+
+        )
+
+        return NextResponse.json({ message: "Comment Status Changed Successfully" }, { status: 200 })
+    }
+    catch (err) {
+        return NextResponse.json({ message: "UnKnown Error" }, { status: 500 })
+    }
+
+}

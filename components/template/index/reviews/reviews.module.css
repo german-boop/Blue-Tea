@@ -1,0 +1,44 @@
+.box {
+  border: var(--border);
+  text-align: center;
+  border-radius: 100px 100px 0 100px;
+  position: relative;
+  z-index: 0;
+  padding: 1rem;
+  background: linear-gradient(rgba(247, 251, 246, 0.1)),
+    url(/images/product-bg.png) left bottom no-repeat;
+}
+
+
+.box img {
+  height: 7rem;
+  width: 7rem;
+  border-radius: 50%;
+  margin-bottom: .7rem;
+}
+
+.stars {
+  padding: .5rem 0
+}
+
+.stars i {
+  font-size: 1.7rem;
+  color: var(--brown-light);
+}
+
+.box p {
+  font-size: 1.2rem;
+  color: #fff;
+  padding: 1rem 0;
+  line-height: 1.5;
+}
+
+.box h3 {
+  font-size: 1.6rem;
+  color: var(--brown-light);
+  line-height: 1.5;
+}
+
+.box span {
+  color: var(--brown-light);
+}
