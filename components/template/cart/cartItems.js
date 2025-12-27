@@ -21,17 +21,22 @@ const shippingSchema = z.object({
 
 export default function CartItems({ userId }) {
     const { addToBasket, increaseCount, decreaseCount, cart, setCart, removeFromCart } = useBasket()
-    const [total, setTotal] = useState(0)
-    const [paymentMethod, setPaymentMethod] = useState("online")
 
-    const { control, handleSubmit, formState: { errors } } = useForm({
-        resolver: zodResolver(shippingSchema),
-        defaultValues: {
-            fullName: "",
-            phone: "",
-            address: "",
-            city: "",
-            postalCode: "",
+    const [showModal, setShowModal] = useState(false);
+
+    const [total, setTotal] = useState(null)
+    const [paymentMethod, setPaymentMethod] = useState("online");
+    const [shippingAddress, setShippingAddress] = useState({
+        fullName: "",
+        phone: "",
+        address: "",
+        city: "",
+        postalCode: "",
+    });
+
+    const calculateProducts = useCallback(() => {
+        if (cart.length) {
+            setTotal(cart.reduce((prev, current) => prev + current.price * current.quantity, 0))
         }
     })
 
@@ -67,21 +72,45 @@ export default function CartItems({ userId }) {
         <div className='container'>
             <div className="row align-items-center justify-content-between">
                 {/* Cart Items */}
-                <div className="col-lg-6 mb-4">
-                    <div className={`${styles.basket} rounded-3 p-3`}>
-                        {cart.length ? cart.map((p) => (
-                            <div key={p.id} className="d-flex align-items-center mb-3">
-                                <Image width={50} height={50} src={p.img} alt={p.title} className="rounded me-3" />
-                                <div className="flex-grow-1">
-                                    <h6 className="mb-1 text-white">{p.title}</h6>
-                                    <small className='text-white'>$ {p.price}</small>
-                                </div>
-                                <div className="d-flex align-items-center gap-1">
-                                    <button onClick={() => decreaseCount(p.id)} className={`${styles.btn_decrease}`}>−</button>
-                                    <span className={styles.price}>{p.count}</span>
-                                    <button onClick={() => increaseCount(p.id)} className={`${styles.btn_increase}`}>+</button>
-                                    <button className="classic" onClick={() =>
-                                        addToBasket(p.id, p.title, p.img, p.price, p.count)}>Add To Cart</button>
+                <div className="col-lg-8">
+                    <div className={`${styles.basket} mb-3 rounded-3`}>
+                        {cart.length ? cart.map((p, index) => (
+                            <>
+                                <div
+                                    key={index + 1}
+                                    className="d-flex align-items-center my-3">
+                                    <Image
+                                        width={50}
+                                        height={50}
+                                        src={p.img}
+                                        className="rounded me-3"
+                                        alt="product"
+                                    />
+                                    <div className="flex-grow-1">
+                                        <h6 className="mb-1 text-white">{p.title}</h6>
+                                        <small className='text-white'> $ {p.price}</small>
+                                    </div>
+                                    <div className="d-flex align-items-center gap-1">
+                                        <button
+                                            onClick={() => decreaseCount(p.id)}
+                                            className={`${styles.btn_decrease} m-1`}>
+                                            −
+                                        </button>
+                                        <span className={styles.price}> {p.quantity}</span>
+                                        <button
+                                            onClick={() => increaseCount(p.id)}
+                                            className={`${styles.btn_increase} m-1`}>
+                                            +
+                                        </button>
+                                        <button
+                                            className={styles.btn}
+                                            onClick={() =>
+                                                addToBasket(p.id, p.name, p.img, p.price, p.count)}>
+                                            Add To Card</button>
+                                    </div>
+                                    <CiCircleRemove
+                                        onClick={() => removeFromCart(p.id)}
+                                        className={styles.remove_item} />
                                 </div>
                                 <CiCircleRemove onClick={() =>
                                     removeFromCart(p.id)} className={styles.remove_item} />
