@@ -1,47 +1,28 @@
 import React from "react";
 import Table from "@/components/modules/table/Table";
 import connectToDB from "@/db/db";
+import { paginate } from "@/utils/helper";
 import { FaRegEdit } from "react-icons/fa";
 import orderModal from "@/model/order";
 import OrdersList from "@/components/template/p-admin/orders/ordersList";
 import Pagination from "@/components/modules/pagination/pagination";
 
 export default async function Page({ searchParams }) {
-  await connectToDB();
+  connectToDB()
+  const searchparams = await searchParams
+  const { id } = searchparams
 
-  const id = await searchParams.id;
-  const page = Number(searchParams.page) || 1;
-  const limit = Number(searchParams.limit) || 15;
+  let paginatedData = null
+  let order = null
 
-  let order = null;
-  let orders = [];
-  let totalCount = 0;
 
   if (id) {
     order = await orderModal.findById(id).lean();
     if (!order) return <div>Order not found</div>;
   } else {
-    let cursor = null;
-    if (page > 1) {
-      const prevOrders = await orderModal
-        .find({})
-        .sort({ _id: 1 })
-        .limit((page - 1) * limit - 1)
-        .select("_id")
-        .lean();
-      cursor = prevOrders[prevOrders.length - 1]?._id;
-    }
-
-    const query = cursor ? { _id: { $gt: cursor } } : {};
-    totalCount = await orderModal.countDocuments();
-
-    orders = await orderModal
-      .find(query)
-      .sort({ _id: 1 })
-      .limit(limit)
-      .populate("user")
-      .lean();
+    paginatedData = await paginate(orderModal, searchparams, {}, "user")
   }
+
 
   return (
     <>
@@ -105,13 +86,13 @@ export default async function Page({ searchParams }) {
                 </th>
               </tr>
             </thead>
-            <OrdersList data={JSON.parse(JSON.stringify(orders))} />
+            <OrdersList data={JSON.parse(JSON.stringify(paginatedData.data))} />
           </Table>
           <Pagination
             href="orders?"
-            currentPage={page}
-            pageCount={Math.ceil(totalCount / limit)}
-            limit={limit}
+            currentPage={paginatedData.page}
+            pageCount={paginatedData.pageCount}
+            limit={paginatedData.limit}
           />
         </>
       )}

@@ -5,39 +5,27 @@ import { authAdmin } from "@/utils/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
-    try {
-        connectToDB()
-        const admin = await authAdmin()
-        if (!admin) throw new Error("This api Protected")
-
-        const { searchParams } = new URL(req.url)
-        const page = Number(searchParams.get("page")) || 1
-        const limit = Number(searchParams.get("limit")) || 15
-
-        let cursor = null
-
-        if (page > 1) {
-            const prevReserve = await reservationModal.find({})
-                .sort({ _id: 1 })
-                .limit((page - 1) * limit)
-                .lean()
-
-            cursor = prevReserve[prevReserve.length - 1]?._id
-        }
-
-        const query = cursor ? { _id: { $gt: cursor } } : {}
-
-        const totalCount = await reservationModal.countDocuments()
-        const reservations = await reservationModal.find(query)
-            .sort({ _id: 1 })
-            .limit(limit)
-            .lean()
-
-        return NextResponse.json({ reservations, totalCount }, { status: 200, })
-    }
-    catch (err) {
-        return NextResponse.json({ message: "Unknown Error" }, { status: 500 })
-    }
+     try {
+          await connectToDB()
+          const admin = await authAdmin()
+          if (!admin) throw ("This Api Protected")
+  
+          const { searchParams } = new URL(req.url);
+          const useCursor = searchParams.has("cursor");
+  
+          const result = await paginate(
+              reservationModal,   // Model
+              searchParams,   // searchParams
+              {},             // filter
+              null,           // populate
+              useCursor       // cursor | pagination
+          );
+          return NextResponse.json(result, { status: 200 });
+      }
+  
+      catch (err) {
+          return NextResponse.json({ message: "UNKNOWN ERROR" }, { status: 500 });
+      }
 }
 
 export async function POST(req) {

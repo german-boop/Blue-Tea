@@ -11,43 +11,28 @@ export async function GET(req, { params }) {
         const { id } = params;
         const { searchParams } = new URL(req.url);
 
-        const page = Number(searchParams.get("page")) || 1;
-        const limit = Number(searchParams.get("limit")) || 10;
-
         const product = await ProductModal.findById(id).lean();
         if (!product) {
-            return NextResponse.json({ message: "Product not found" }, { status: 404 });
+            return NextResponse.json(
+                { message: "Product not found" },
+                { status: 404 }
+            );
         }
+        const useCursor = searchParams.has("cursor");
 
-        let cursor = null;
-        if (page > 1) {
-            const prev = await commentModel
-                .find({ productID: product._id })
-                .sort({ _id: 1 })
-                .limit((page - 1) * limit)
-                .lean();
+        const result = await paginate(
+            commentModel,               // Model
+            searchParams,               // searchParams
+            { productID: product._id }, // filter
+            null,                       // populate
+            useCursor                   // cursor /page
+        );
 
-            cursor = prev[prev.length - 1]?._id;
-        }
-
-        const query = cursor
-            ? { _id: { $gt: cursor }, productID: product._id }
-            : { productID: product._id };
-
-        const totalCount = await commentModel.countDocuments({ productID: product._id });
-
-        const comments = await commentModel
-            .find(query)
-            .sort({ _id: 1 })
-            .limit(limit)
-            .lean();
-
-        return NextResponse.json({ comments, totalCount }, { status: 200 });
-    } catch {
+        return NextResponse.json(result, { status: 200 });
+    } catch (err) {
         return NextResponse.json({ message: "Unknown Error" }, { status: 500 });
     }
 }
-
 
 export async function POST(req) {
     try {

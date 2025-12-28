@@ -19,3 +19,30 @@ export const manageError = (error) => {
 
   toast.error(message);
 };
+
+
+
+export async function paginate(Model, searchParams, filter = {}, populate, useCursor = false) {
+
+  if (useCursor) {
+    const cursor = searchParams.get("cursor");
+    const limit = Number(searchParams.get("limit")) || 15
+    const query = cursor ? { ...filter, _id: { $gt: cursor } } : filter;
+    const data = await Model.find(query).sort({ _id: 1 }).limit(limit + 1).populate(populate).lean();
+    const hasNextPage = data.length > limit;
+    if (hasNextPage) data.pop();
+    const nextCursor = hasNextPage ? data[data.length - 1]._id.toString() : null;
+
+    return { data, nextCursor, limit };
+  }
+  const page = Number(searchParams.page) || 1;
+  const limit = Number(searchParams.limit) || 20;
+
+  const skip = (page - 1) * limit;
+  const totalCount = await Model.countDocuments(filter);
+
+  const data = await Model.find(filter).sort({ _id: -1 }).skip(skip).limit(limit).populate(populate).lean();
+  const pageCount = Math.ceil(totalCount / limit);
+  return { data, totalCount, pageCount, page, limit };
+
+}

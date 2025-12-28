@@ -1,44 +1,50 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import toast from "react-hot-toast";
 import { usePut } from "@/utils/hooks/useReactQueryPanel";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-
+import { userValidationSchema } from "@/validators/user";
 export default function AdminProfileClient({ adminData }) {
     const router = useRouter()
+    const fileInputRef = React.useRef(null);
+
     const { mutate: userMutate } = usePut("/users", {
         onSuccess: () => {
             toast.success("user updated Successfully :)")
             router.refresh()
         },
-        onError: () => toast.error("Error"),
     })
 
-    const [formData, setFormData] = useState({
-        name: adminData.name,
-        email: adminData.email,
-        phone: adminData.phone,
-        avatar: null,
-        password: "",
-        newPassword: "",
-        confirmPassword: ""
-    });
-
-    const handleChange = (e) => {
-        const { name, value, files } = e.target;
-        if (files) {
-            setFormData(prev => ({ ...prev, [name]: files[0] }));
-        } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
+    // React Hook Form setup
+    const {
+        register: formRegister,
+        handleSubmit,
+        setValue,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(userValidationSchema),
+        defaultValues: {
+            name: adminData.name,
+            email: adminData.email,
+            phone: adminData.phone,
+            avatar: null,
+            password: "",
+            newPassword: "",
+            confirmPassword: ""
         }
-    };
+    })
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
+    const onSubmit = async (values) => {
         const data = new FormData();
-        Object.entries(formData).forEach(([key, val]) => {
-            if (val !== null) data.append(key, val);
+        Object.entries(values).forEach(([key, val]) => {
+            if (val !== null && val !== "") {
+                data.append(key, val);
+            }
+            if (fileInputRef.current?.files?.[0]) {
+                data.append("avatar", fileInputRef.current.files[0]);
+            }
         });
 
         userMutate({ id: adminData._id, payload: data })
@@ -46,7 +52,11 @@ export default function AdminProfileClient({ adminData }) {
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="row g-3">
+            <form
+                className="row g-3"
+                onSubmit={handleSubmit(onSubmit)}
+                noValidate
+            >
                 {/* Name & Email */}
                 <div className="col-md-12">
                     <label className="form-label">Name</label>
@@ -54,8 +64,7 @@ export default function AdminProfileClient({ adminData }) {
                         type="text"
                         name="name"
                         className="form-control"
-                        value={formData.name}
-                        onChange={handleChange}
+                        {...formRegister("name")}
                         required
                     />
                 </div>
@@ -65,8 +74,7 @@ export default function AdminProfileClient({ adminData }) {
                         type="email"
                         name="email"
                         className="form-control"
-                        value={formData.email}
-                        onChange={handleChange}
+                        {...formRegister("email")}
                         required
                     />
                 </div>
@@ -76,8 +84,7 @@ export default function AdminProfileClient({ adminData }) {
                         type="text"
                         name="phone"
                         className="form-control"
-                        value={formData.phone}
-                        onChange={handleChange}
+                        {...formRegister("phone")}
                         required
                     />
                 </div>
@@ -90,7 +97,7 @@ export default function AdminProfileClient({ adminData }) {
                         name="avatar"
                         accept="image/*"
                         className="form-control"
-                        onChange={handleChange}
+                        ref={fileInputRef}
                     />
                 </div>
 
@@ -101,8 +108,8 @@ export default function AdminProfileClient({ adminData }) {
                         type="password"
                         name="password"
                         className="form-control"
-                        value={formData.password}
-                        onChange={handleChange}
+                        {...formRegister("password")}
+
                     />
                 </div>
                 <div className="col-md-4">
@@ -111,8 +118,8 @@ export default function AdminProfileClient({ adminData }) {
                         type="password"
                         name="newPassword"
                         className="form-control"
-                        value={formData.newPassword}
-                        onChange={handleChange}
+                        {...formRegister("newPassword")}
+
                     />
                 </div>
                 <div className="col-md-4">
@@ -121,8 +128,7 @@ export default function AdminProfileClient({ adminData }) {
                         type="password"
                         name="confirmPassword"
                         className="form-control"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
+                        {...formRegister("confirmPassword")}
                     />
                 </div>
 

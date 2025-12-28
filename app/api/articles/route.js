@@ -7,37 +7,21 @@ import { writeFile } from "fs/promises"
 import { NextResponse } from "next/server"
 export async function GET(req) {
     try {
-        connectToDB()
-        const admin = await authAdmin()
-        if (!admin) throw new Error("This api Protected")
+        await connectToDB();
 
-        const { searchParams } = new URL(req.url)
+        const { searchParams } = new URL(req.url);
+        const useCursor = searchParams.has("cursor");
 
-        const page = Number(searchParams.get("page")) || 1
-        const limit = Number(searchParams.get("limit")) || 15
-
-        let cursor = null;
-        if (page > 1) {
-
-            const prevarticles = await ArticleModel.find({})
-                .limit((page - 1) * limit)
-                .sort({ _id: 1 })
-                .lean()
-
-            cursor = prevarticles[prevarticles.length - 1]?._id
-        }
-        const query = cursor ? { _id: { $gt: cursor } } : {};
-
-        const totalCount = await ArticleModel.countDocuments({});
-        const articles = await ArticleModel
-            .find(query)
-            .sort({ _id: 1 })
-            .limit(limit)
-            .lean()
-
-        return NextResponse.json({ articles, totalCount }, { status: 200 })
+        const result = await paginate(
+            ArticleModel,   // Model
+            searchParams,   // searchParams
+            {},             // filter
+            null,           // populate
+            useCursor       // cursor | pagination
+        );
+        return NextResponse.json(result, { status: 200 });
     } catch (err) {
-        return NextResponse.json({ message: "UnKnown Error" }, { status: 500 })
+        return NextResponse.json({ message: "Unknown Error" }, { status: 500 });
     }
 }
 

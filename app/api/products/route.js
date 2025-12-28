@@ -9,50 +9,35 @@ import { NextResponse } from "next/server";
 
 export async function GET(req) {
     try {
-        connectToDB()
-        const admin = await authAdmin()
-        if (!admin) throw new Error("This api Protected")
+        await connectToDB();
 
         const { searchParams } = new URL(req.url);
-        const page = Number(searchParams.get("page")) || 1;
-        const limit = Number(searchParams.get("limit")) || 10;
-        const categoryName = searchParams.get("category")
+        const useCursor = searchParams.has("cursor");
 
-        let categoryId;
+        const categoryName = searchParams.get("category");
+        let filter = {};
+
         if (categoryName) {
-            const category = await CategoryModel.findOne({ name: categoryName }).lean();
-            if (category) categoryId = category._id;
+            const category = await CategoryModel
+                .findOne({ name: categoryName })
+                .lean();
+            if (category) filter.category = category._id;
         }
 
-        let cursor = null
-        const queryBase = categoryId ? { category: categoryId } : {}
+        const result = await paginate(
+            ProductModal,
+            searchParams,
+            filter,
+            null,
+            useCursor
+        );
 
-        if (page > 1) {
-            const prevProducts = await ProductModal
-                .find(queryBase)
-                .sort({_id : 1})
-                .limit((page - 1) * limit)
-                .lean()
-            cursor = prevProducts[prevProducts.length - 1]?._id
-        }
-
-        const query = cursor
-            ? { _id: { $gt: cursor }, ...queryBase }
-            : queryBase;
-
-        const totalCount = await ProductModal.countDocuments(query);
-        const products = await ProductModal
-            .find(query, "-__v")
-            .sort({ _id: 1 })
-            .limit(limit)
-            .lean();
-
-        return NextResponse.json({ products, totalCount }, { status: 200 });
-
-    } catch (err) {
-        return NextResponse.json({ message: "Unknown Error" }, { status: 500 })
+        return NextResponse.json(result, { status: 200 });
+    } catch {
+        return NextResponse.json({ message: "Unknown Error" }, { status: 500 });
     }
 }
+
 
 export async function POST(req) {
     try {

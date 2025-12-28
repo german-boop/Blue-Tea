@@ -1,14 +1,11 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation';
 import { NewMenuItem } from '@/utils/useServerAction';
 import { useActionState } from "react";
 import swal from 'sweetalert';
 export default function AddnewMenuItem({ tree }) {
-    console.log(tree);
-
     const router = useRouter();
-    const [category, setCategory] = useState("");
     const [state, formAction] = useActionState(NewMenuItem, {
         message: "",
         error: undefined,
@@ -36,7 +33,9 @@ export default function AddnewMenuItem({ tree }) {
                 buttons: "ok",
             });
         }
-    }, [state.message]);
+    }, [state.message, router]);
+
+
     return (
         <div className="transparentCard">
             <form
@@ -70,7 +69,6 @@ export default function AddnewMenuItem({ tree }) {
                     <label className="form-label">Category</label>
                     <select
                         className="form-select"
-                        onChange={(e) => setCategory(e.target.value)}
                         name='category'
                         required>
                         <option disabled>Select category</option>

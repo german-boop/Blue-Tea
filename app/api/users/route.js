@@ -6,20 +6,25 @@ import { userValidationSchema } from "@/validators/user";
 
 export async function GET(req) {
     try {
-        await connectToDB();
-        const admin = await authAdmin();
-        if (!admin) throw new Error("This API Protected");
+        await connectToDB()
+        const admin = await authAdmin()
+        if (!admin) throw ("This Api Protected")
 
-        const users = await UserModal.find({})
-            .populate("comments", "-email -username")
-            .lean();
+        const { searchParams } = new URL(req.url);
+        const useCursor = searchParams.has("cursor");
 
-        if (!users || users.length === 0)
-            return NextResponse.json({ message: "Not FOUND" }, { status: 404 });
+        const result = await paginate(
+            UserModal,   // Model
+            searchParams,   // searchParams
+            {},             // filter
+            "comments",           // populate
+            useCursor       // cursor | pagination
+        );
+        return NextResponse.json(result, { status: 200 });
+    }
 
-        return NextResponse.json(users, { status: 200 });
-    } catch (err) {
-        return NextResponse.json({ message: err.message }, { status: 500 });
+    catch (err) {
+        return NextResponse.json({ message: "UNKNOWN ERROR" }, { status: 500 });
     }
 }
 
