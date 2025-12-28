@@ -2,6 +2,7 @@ import React from 'react'
 import Table from '@/components/modules/table/Table'
 import connectToDB from '@/db/db'
 import { FaRegEdit } from "react-icons/fa";
+import { paginate } from '@/utils/helper';
 import Pagination from '@/components/modules/pagination/pagination'
 import menuItemModel from '@/model/menuItem'
 import MenuList from '@/components/template/p-admin/menu/menuList';
@@ -10,33 +11,7 @@ import MenuList from '@/components/template/p-admin/menu/menuList';
 export default async function page({ searchParams }) {
     connectToDB()
     const searchparams = await searchParams
-    const page = Number(searchparams.page) || 1;
-    const limit = Number(searchparams.limit) || 20;
-
-    let cursor = null
-
-    if (page > 1) {
-        const menuItemsPrev = await menuItemModel
-            .find({})
-            .sort({ _id: 1 })
-            .limit((page - 1) * limit)
-            .select("_id")
-            .populate("category")
-            .lean();
-
-        cursor = menuItemsPrev[menuItemsPrev.length - 1]?._id
-    }
-
-    const query = cursor ? { _id: { $gt: cursor } } : {};
-    const totalCount = await menuItemModel.countDocuments();
-
-    const menuItems = await menuItemModel
-        .find(query)
-        .sort({ _id: 1 })
-        .limit(limit)
-        .populate("category")
-        .lean();
-
+    const paginatedData = await paginate(menuItemModel, searchparams, {}, "category")
     return (
         <>
             <Table>
@@ -50,13 +25,13 @@ export default async function page({ searchParams }) {
                         <th><FaRegEdit /></th>
                     </tr>
                 </thead>
-                <MenuList data={JSON.parse(JSON.stringify(menuItems))} />
+                <MenuList data={JSON.parse(JSON.stringify(paginatedData.data))} />
             </Table>
             <Pagination
                 href={`menu?`}
-                currentPage={page}
-                pageCount={Math.ceil(totalCount / limit)}
-                limit={limit}
+                currentPage={paginatedData.page}
+                pageCount={paginatedData.pageCount}
+                limit={paginatedData.limit}
             />
         </>
     )

@@ -8,7 +8,7 @@ export async function POST() {
   try {
     await connectToDB();
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const refreshTokenCookie = cookieStore.get("refreshToken")?.value;
 
     if (!refreshTokenCookie) {
@@ -37,7 +37,6 @@ export async function POST() {
       }
     );
   } catch (err) {
-    console.error(err);
     return NextResponse.json({ message: err.message || "Unknown error" }, { status: 500 });
   }
 }

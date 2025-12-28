@@ -1,43 +1,51 @@
 "use client"
 import React from 'react'
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { usePut } from '@/utils/hooks/useReactQueryPanel';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import RichEditor from './RichEditor';
+import { articleSchema } from '@/validators/article';
 export default function EditArticle({ data }) {
     const router = useRouter()
-    const [form, setForm] = useState({
-        title: "",
-        author: "",
-        shortDescription: "",
-        content: "",
-        cover: "",
-    });
+    const fileInputRef = React.useRef(null);
 
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(articleSchema),
+        defaultValues: {
+            title: "",
+            author: "",
+            shortDescription: "",
+            content: "",
+            cover: null,
+        },
+    })
+
+    // fill form with data
     useEffect(() => {
-        if (data) {
-            setForm({
-                title: data.title || "",
-                author: data.author || "",
-                shortDescription: data.shortDescription || "",
-                content: data.content || "",
-                cover: data.cover || null,
-            });
-        }
-    }, [data]);
+        if (!data) return
+        setValue("title", data.title)
+        setValue("author", data.author)
+        setValue("shortDescription", data.shortDescription)
+        setValue("content", data.content)
+    }, [data, setValue])
 
     // PUT article
     const { mutate } = usePut("/articles", {
         onSuccess: () => {
-            toast.success("article Editted Successfully :)"),
-                router.push("/p-admin/articles");
+            toast.success("article Editted Successfully :)")
+            router.replace("/p-admin/articles")
         },
-        onError: () => toast.error("Error updating article"),
     });
 
-    const handleEdit = (e) => {
-        e.preventDefault();
+    const onSubmit = (values) => {
 
         swal({
             title: "Are You Sure To Edit This item?",
@@ -49,24 +57,28 @@ export default function EditArticle({ data }) {
             const formData = new FormData();
             const id = data._id
             formData.append("_id", id);
-            formData.append("title", form.title);
-            formData.append("author", form.author);
-            formData.append("shortDescription", form.shortDescription);
-            formData.append("content", form.content);
-            formData.append("cover", form.cover);
+            formData.append("title", values.title);
+            formData.append("author", values.author);
+            formData.append("shortDescription", values.shortDescription);
+            formData.append("content", values.content);
 
-            mutate({ id, payload: formData });
+            if (fileInputRef.current?.files?.[0]) {
+                formData.append("cover", fileInputRef.current.files[0]);
+            }
+
+            mutate({ id: id, payload: formData });
         });
     };
     return (
-        <form className="row g-3">
+        <form className="row g-3"
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate>
             <div className="col-md-6">
                 <label className="form-label">Title</label>
                 <input
                     type="text"
                     className="form-control"
-                    value={form.title}
-                    onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                    {...register("title")}
                     required
                 />
             </div>
@@ -75,8 +87,7 @@ export default function EditArticle({ data }) {
                 <input
                     type="text"
                     className="form-control"
-                    value={form.author}
-                    onChange={(e) => setForm(prev => ({ ...prev, author: e.target.value }))}
+                    {...register("author")}
                     required
                 />
             </div>
@@ -85,30 +96,26 @@ export default function EditArticle({ data }) {
                 <input
                     type="text"
                     className="form-control"
-                    value={form.shortDescription}
-                    onChange={(e) => setForm(prev => ({ ...prev, shortDescription: e.target.value }))}
+                    {...register("shortDescription")}
                     required
                 />
             </div>
-            {form.content !== "" && (
-                <RichEditor
-                    value={form.content}
-                    onChange={(val) => setForm(prev => ({ ...prev, content: val }))}
-                />
-            )}
+            <RichEditor
+                value={data.content || ""} onChange={(val) => setValue("content", val)}
+            />
             <div className="col-md-6">
                 <label className="form-label">Cover Image URL</label>
                 <input
                     type="file"
                     className="form-control"
-                    onChange={(e) => setForm(prev => ({ ...prev, cover: e.target.files[0] }))}
+                    ref={fileInputRef}
                     placeholder="https://example.com/image.jpg"
                 />
             </div>
 
             <div className="col-12 d-flex justify-content-end mt-4">
                 <button
-                    onClick={(e) => handleEdit(e)}
+                    type='submit'
                     className="edit">
                     Edit
                 </button>

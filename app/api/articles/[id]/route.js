@@ -62,22 +62,19 @@ export async function PUT(req, { params }) {
         }
 
         const formData = await req.formData();
-        const body = Object.fromEntries(formData.entries());        
+        const body = Object.fromEntries(formData.entries());
 
         const parsed = articleSchema.safeParse(body);
-        console.log(parsed);
-        
 
         if (!parsed.success) {
             return NextResponse.json(
                 { errors: parsed.error.flatten().fieldErrors },
                 { status: 400 }
             );
-        }               
+        }
 
-        const cover = formData.get("cover");        
+        const cover = formData.get("cover");
         let coverUrl = existingArticle.cover;
-
         if (cover && cover.size) {
             const buffer = Buffer.from(await cover.arrayBuffer());
             const filename = Date.now() + "-" + cover.name;
@@ -89,10 +86,7 @@ export async function PUT(req, { params }) {
             { _id: id },
             {
                 $set: {
-                    title: parsed.data.title,
-                    author: parsed.data.author,
-                    shortDescription: parsed.data.shortDescription,
-                    content: parsed.data.content,
+                    ...parsed.data,
                     cover: coverUrl
 
                 },
@@ -100,7 +94,9 @@ export async function PUT(req, { params }) {
         );
 
         return NextResponse.json({ message: "Article Updated" }, { status: 200 });
-    } catch (err) {        
+    } catch (err) {
+        console.log(err);
+
         return NextResponse.json({ message: "UnKnown Error" }, { status: 500 });
     }
 }
