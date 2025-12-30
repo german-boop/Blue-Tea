@@ -3,6 +3,7 @@ import WishlistModal from "@/model/wishList";
 import ProductModal from "@/model/product";
 import { getMe } from "@/utils/auth";
 import { isValidObjectId } from "mongoose";
+import { paginate } from "@/utils/helper";
 import { NextResponse } from "next/server";
 export async function GET(req) {
     try {
@@ -20,7 +21,8 @@ export async function GET(req) {
             searchParams,           // searchParams
             { user: user._id },     // filter
             "products",   // populate
-            useCursor               // cursor | pagination
+            useCursor,
+            true              // cursor | pagination
         );
 
         return NextResponse.json(result, { status: 200 });

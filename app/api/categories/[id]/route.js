@@ -6,7 +6,7 @@ import { NextResponse } from "next/server"
 
 export async function GET(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -27,7 +27,7 @@ export async function GET(req, { params }) {
 
 export async function DELETE(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -39,13 +39,13 @@ export async function DELETE(req, { params }) {
         return NextResponse.json({ message: "category Removed" }, { status: 200 })
 
     } catch (err) {
-        return NextResponse.json({ message: "UnKnown Error" }, { status: 200 })
+        return NextResponse.json({ message: "UnKnown Error" }, { status: 500 })
     }
 }
 
 
 export async function PUT(req, { params }) {
-    connectToDB()
+    await connectToDB()
     try {
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
@@ -60,7 +60,7 @@ export async function PUT(req, { params }) {
         return NextResponse.json({ message: "category Updated" }, { status: 200 })
 
     } catch (err) {
-        return NextResponse.json({ message: "UnKnown Error" }, { status: 200 })
+        return NextResponse.json({ message: "UnKnown Error" }, { status: 500 })
     }
 
 }

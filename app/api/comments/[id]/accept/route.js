@@ -4,9 +4,9 @@ import { authAdmin } from "@/utils/auth"
 import { isValidObjectId } from "mongoose"
 import { NextResponse } from "next/server"
 
-export async function PUT(req,{params}) {
+export async function PUT(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -18,7 +18,6 @@ export async function PUT(req,{params}) {
 
         await commentModel.findByIdAndUpdate(id,
             { isAccept: !comment.isAccept }
-
         )
 
         return NextResponse.json({ message: "Comment Status Changed Successfully" }, { status: 200 })

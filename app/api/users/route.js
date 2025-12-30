@@ -2,6 +2,7 @@ import connectToDB from "@/db/db";
 import UserModal from "@/model/user";
 import { authAdmin } from "@/utils/auth";
 import { NextResponse } from "next/server";
+import { paginate } from "@/utils/helper";
 import { userValidationSchema } from "@/validators/user";
 
 export async function GET(req) {
@@ -18,7 +19,8 @@ export async function GET(req) {
             searchParams,   // searchParams
             {},             // filter
             "comments",           // populate
-            useCursor       // cursor | pagination
+            useCursor,
+            true      // cursor | pagination
         );
         return NextResponse.json(result, { status: 200 });
     }

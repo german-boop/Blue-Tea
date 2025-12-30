@@ -1,5 +1,6 @@
 import WishlistModal from '@/model/wishList';
 import { getMe } from '@/utils/auth';
+import { paginate } from '@/utils/helper';
 import Product from '@/components/modules/product/product';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -37,31 +38,13 @@ export default async function page({ searchParams }) {
   const user = await getMe()
   if (!user) return redirect("/login-register")
 
-  const limit = Number(searchParams.limit) || 15;
-  const cursor = searchParams.cursor || null;
+  const searchparams = await searchParams
+  const paginatedData = await paginate(WishlistModal, searchparams, {}, "products", true, false)
 
-  const query = {
-    user: user._id,
-    ...(cursor && { _id: { $gt: cursor } })
-  };
-
-  const items = await WishlistModal
-    .find(query)
-    .sort({ _id: 1 })
-    .limit(limit + 1)
-    .populate('products')
-    .lean();
-
-  const hasNextPage = items.length > limit;
-  if (hasNextPage) items.pop();
-
-  const nextCursor = hasNextPage
-    ? items[items.length - 1]._id.toString()
-    : null;
 
   return (
     <>
-      {user && items.length > 0 ?
+      {user && paginatedData.data.length > 0 ?
         <div className='py-5'>
           <div className='header'>
             <h1>Favorites List</h1>
@@ -69,7 +52,7 @@ export default async function page({ searchParams }) {
           <div className='container'>
             <div className='row gap-1'>
               {
-                JSON.parse(JSON.stringify(items)).map((w, index) => (
+                paginatedData.data.map((w, index) => (
                   w.products.map((item, index) => (
                     <Product
                       key={index + 1}
@@ -85,11 +68,11 @@ export default async function page({ searchParams }) {
                 ))
               }
             </div>
-            {nextCursor && (
+            {paginatedData.nextCursor && (
               <div className="mt-4 text-center">
                 <Link
                   className='classic'
-                  href={`/favorites?cursor=${nextCursor}&limit=${limit}`}>
+                  href={`/favorites?cursor=${paginatedData.nextCursor}&limit=${paginatedData.limit}`}>
                   Load more
                 </Link>
               </div>

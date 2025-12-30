@@ -5,17 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useDelete } from '@/utils/hooks/useReactQueryPanel'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import swal from 'sweetalert'
 
 export default function ProductList({ data }) {
     const router = useRouter()
-
     const { mutate } = useDelete(`/products`, {
         onSuccess: (data) => {
             toast.success("Item Removed Successfully :)")
             router.refresh()
-        },
-        onError: (err) => {
-            toast.error("Error creating order");
         },
     })
 

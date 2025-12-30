@@ -7,18 +7,7 @@ import reservationModal from '@/model/reservation';
 
 export default async function page({ searchParams }) {
     connectToDB()
-    const searchparams = await searchParams
-
-    const page = Number(searchparams.page) || 1;
-    const limit = Number(searchparams.limit) || 15;
-
-    const skip = (page - 1) * limit;
-    const totalCount = await reservationModal.countDocuments();
-
-    const reservations = await reservationModal.find({})
-        .skip(skip)
-        .limit(limit)
-        .lean();
+    const paginatedData = await paginate(reservationModal, searchParams)
 
     return (
         <>
@@ -38,7 +27,7 @@ export default async function page({ searchParams }) {
                     </tr>
                 </thead>
                 <tbody>
-                    {JSON.parse(JSON.stringify(reservations)).map((r, index) => (
+                    {JSON.parse(JSON.stringify(paginatedData.data)).map((r, index) => (
                         <tr key={index + 1}>
                             <td className="number">
                                 <span>{index + 1}</span></td>
@@ -50,7 +39,7 @@ export default async function page({ searchParams }) {
                             <td>{r.guests}</td>
                             <td>
                                 <button
-                                   className="classic">
+                                    className="classic">
                                     Content
                                 </button>
                             </td>
@@ -72,9 +61,9 @@ export default async function page({ searchParams }) {
             </Table>
             <Pagination
                 href={`reservations?`}
-                currentPage={page}
-                pageCount={Math.ceil(totalCount / limit)}
-                limit={limit}
+                currentPage={paginatedData.page}
+                pageCount={paginatedData.pageCount}
+                limit={paginatedData.limit}
             />
         </>
     )

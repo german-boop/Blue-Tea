@@ -34,7 +34,6 @@ export async function POST(req) {
             { status: 200 }
         )
     } catch (err) {
-        console.log(err);
 
         return NextResponse.json({ message: "Unknown Error" }, { status: 500 })
     }

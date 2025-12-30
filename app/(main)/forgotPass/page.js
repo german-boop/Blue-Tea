@@ -62,8 +62,7 @@ export default function ForgotPass() {
                         <form
                             className={styles.login_form}
                             onSubmit={handleSubmit(forgotPassHandler)}
-                            noValidate
-                        >
+                            noValidate>
                             <div className={styles.form_group}>
                                 <div className={styles.input_wrapper}>
                                     <input

@@ -1,14 +1,13 @@
 "use client"
-import React, { useEffect } from 'react'
-import { useRouter } from 'next/navigation';
-import { NewMenuItem } from '@/utils/useServerAction';
+import React, { useEffect, useRef } from 'react'
+import { NewMenuItem } from '@/utils/actions/menuItemServerAction';
 import { useActionState } from "react";
-import swal from 'sweetalert';
+import toast from 'react-hot-toast';
 export default function AddnewMenuItem({ tree }) {
-    const router = useRouter();
+    const formRef = useRef(null);
     const [state, formAction] = useActionState(NewMenuItem, {
-        message: "",
-        error: undefined,
+        status: null,
+        message: null,
         fields: {
             name: "",
             price: "",
@@ -20,25 +19,17 @@ export default function AddnewMenuItem({ tree }) {
     });
 
     useEffect(() => {
-        if (state.message === "success") {
-            swal({
-                title: "menuItem added Successfully :)",
-                icon: "success",
-                buttons: "ok",
-            }).then(() => router.replace("/p-admin/menu"));
-        } else if (state.message === "error") {
-            swal({
-                title: "Please fill out required fields :(",
-                icon: "warning",
-                buttons: "ok",
-            });
+        if (state?.status === 201 || state.status === 200) {
+            toast.success("menuItem added Successfully :)")
+             formRef.current?.reset();
         }
-    }, [state.message, router]);
+    }, [state.status]);
 
 
     return (
         <div className="transparentCard">
             <form
+                ref={formRef}
                 action={async (formData) => {
                     await formAction(formData);
                 }}
@@ -49,6 +40,9 @@ export default function AddnewMenuItem({ tree }) {
                         name='name'
                         className="form-control"
                         required />
+                    {state?.errors?.name && (
+                        <span className="text-sm text-red-500">{state.errors.name[0]}</span>
+                    )}
                 </div>
 
                 <div className="col-md-6">
@@ -56,6 +50,9 @@ export default function AddnewMenuItem({ tree }) {
                     <input type="number"
                         name='price'
                         className="form-control" required />
+                    {state?.errors?.price && (
+                        <span className="text-sm text-red-500">{state.errors.price[0]}</span>
+                    )}
                 </div>
 
                 <div className="col-12">
@@ -63,6 +60,9 @@ export default function AddnewMenuItem({ tree }) {
                     <input type="text"
                         name="description"
                         lassName="form-control" required />
+                    {state?.errors?.description && (
+                        <span className="text-sm text-red-500">{state.errors.description[0]}</span>
+                    )}
                 </div>
 
                 <div className="col-md-6">
@@ -82,6 +82,9 @@ export default function AddnewMenuItem({ tree }) {
                             ))
                         ))}
                     </select>
+                    {state?.errors?.category && (
+                        <span className="text-sm text-red-500">{state.errors.category[0]}</span>
+                    )}
                 </div>
                 <div className="col-md-6">
                     <label className="form-label">Cover Image</label>
@@ -97,6 +100,9 @@ export default function AddnewMenuItem({ tree }) {
                         name='size'
                         className="form-control"
                         placeholder="M,L,S" />
+                    {state?.errors?.size && (
+                        <span className="text-sm text-red-500">{state.errors.size[0]}</span>
+                    )}
                 </div>
                 <div className="col-12 d-flex gap-2 mt-5 justify-content-end">
                     <button type="submit" className="edit">Create</button>

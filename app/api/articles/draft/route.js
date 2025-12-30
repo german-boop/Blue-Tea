@@ -1,41 +1,30 @@
 import connectToDB from "@/db/db"
 import ArticleModel from "@/model/article"
 import { authAdmin } from "@/utils/auth"
-import path from "path"
+import { paginate } from "@/utils/helper"
+import handleFileUpload from "@/utils/serverFile"
 import { articleSchema } from "@/validators/article"
-import { writeFile } from "fs/promises"
 import { NextResponse } from "next/server"
 export async function GET(req) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
         const { searchParams } = new URL(req.url)
+        const useCursor = searchParams.has("cursor");
 
-        const page = Number(searchParams.get("page")) || 1
-        const limit = Number(searchParams.get("limit")) || 15
+        const filter = { status: "unpublish" };
 
-        let cursor = null;
-        if (page > 1) {
-
-            const prevarticles = await ArticleModel.find({ status: "unpublish" })
-                .limit((page - 1) * limit)
-                .sort({ _id: 1 })
-                .lean()
-
-            cursor = prevarticles[prevarticles.length - 1]?._id
-        }
-        const query = cursor ? { _id: { $gt: cursor }, status: "unpublish" } : { status: "unpublish" };
-
-        const totalCount = await ArticleModel.countDocuments({ status: "unpublish" });
-        const articles = await ArticleModel
-            .find(query)
-            .sort({ _id: 1 })
-            .limit(limit)
-            .lean()
-
-        return NextResponse.json({ articles, totalCount }, { status: 200 })
+        const result = await paginate(
+            ArticleModel,   // Model
+            searchParams,   // searchParams
+            filter,             // filter
+            null,           // populate
+            useCursor,
+            true       // cursor | pagination
+        );
+        return NextResponse.json(result, { status: 200 })
     } catch (err) {
         return NextResponse.json({ message: "UnKnown Error" }, { status: 500 })
     }
@@ -43,7 +32,7 @@ export async function GET(req) {
 
 export async function POST(req) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -59,13 +48,7 @@ export async function POST(req) {
             );
         }
 
-        const cover = formData.get("cover");
-        const buffer = Buffer.from(await cover.arrayBuffer())
-        const filename = Date.now() + cover.name
-        await writeFile(path.join(process.cwd(), "public/uploads/" + filename), buffer)
-
         const isArticletExist = await ArticleModel.findOne({ title: body.title })
-
         if (isArticletExist) {
             return NextResponse.json(
                 { message: "Article already exists" },
@@ -73,9 +56,10 @@ export async function POST(req) {
             )
         }
 
+        const cover = await handleFileUpload(formData.get("cover")) || "";
         const article = await ArticleModel.create({
             ...parsed.data,
-            cover: `http://localhost:3000/uploads/${filename}`
+            cover
         })
 
         return NextResponse.json({ message: "article Created Successfully" },

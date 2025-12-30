@@ -7,8 +7,8 @@ import { orderSchema } from "@/validators/order"
 
 export async function GET(req, { params }) {
     try {
-        connectToDB()
-        const { id } = params
+        await connectToDB()
+        const { id } = await params
         if (!isValidObjectId(id)) return NextResponse.json({ message: "Not Valid :)" }, { status: 422 })
 
         const order = await orderModal.findOne({ _id: id }).lean()
@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
 
 export async function DELETE(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
         const { id } = params
@@ -35,7 +35,7 @@ export async function DELETE(req, { params }) {
 
 export async function PUT(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 

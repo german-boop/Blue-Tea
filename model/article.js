@@ -1,6 +1,5 @@
 
 const mongoose = require("mongoose");
-import UserModal from "./user";
 
 const schema = new mongoose.Schema({
     title: {
@@ -35,6 +34,14 @@ const schema = new mongoose.Schema({
 },
     {
         timestamps: true,
+        toJSON: {
+            transform(doc, ret) {
+                ret.id = ret._id.toString(); 
+                delete ret._id;
+                delete ret.__v;
+                return ret;
+            },
+        }
     }
 );
 

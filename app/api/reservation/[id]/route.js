@@ -7,7 +7,7 @@ import { NextResponse } from "next/server"
 
 export async function GET(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const { id } = await params
         const isvalidId = isValidObjectId(id)
         if (!isvalidId) return NextResponse.json({ message: "Not Valid :)" }, { satatus: 422 })
@@ -22,7 +22,7 @@ export async function GET(req, { params }) {
 
 export async function DELETE(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -41,7 +41,7 @@ export async function DELETE(req, { params }) {
 
 export async function PUT(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const { id } = await params
         const isvalidId = isValidObjectId(id)
 

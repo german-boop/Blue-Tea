@@ -1,9 +1,9 @@
 import connectToDB from "@/db/db"
 import ArticleModel from "@/model/article"
 import { authAdmin } from "@/utils/auth"
-import path from "path"
 import { articleSchema } from "@/validators/article"
-import { writeFile } from "fs/promises"
+import { paginate } from "@/utils/helper"
+import handleFileUpload from "@/utils/serverFile"
 import { NextResponse } from "next/server"
 export async function GET(req) {
     try {
@@ -17,7 +17,8 @@ export async function GET(req) {
             searchParams,   // searchParams
             {},             // filter
             null,           // populate
-            useCursor       // cursor | pagination
+            useCursor,
+            true       // cursor | pagination
         );
         return NextResponse.json(result, { status: 200 });
     } catch (err) {
@@ -27,7 +28,7 @@ export async function GET(req) {
 
 export async function POST(req) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -42,12 +43,6 @@ export async function POST(req) {
                 { status: 400 }
             );
         }
-
-        const cover = formData.get("cover");
-        const buffer = Buffer.from(await cover.arrayBuffer())
-        const filename = Date.now() + cover.name
-        await writeFile(path.join(process.cwd(), "public/uploads/" + filename), buffer)
-
         const isArticletExist = await ArticleModel.findOne({ title: body.title })
         if (isArticletExist) {
             return NextResponse.json(
@@ -55,16 +50,20 @@ export async function POST(req) {
                 { status: 409 }
             )
         }
-
+        const cover = await handleFileUpload(formData.get("cover")) || "";
         const article = await ArticleModel.create({
             ...parsed.data,
-            cover: `http://localhost:3000/uploads/${filename}`
+            cover
         })
-        return NextResponse.json({ message: "article Created Successfully" },
-            { status: 200 }, { data: article })
+        return NextResponse.json(
+            {
+                message: "Article Created Successfully",
+                data: article
+            },
+            { status: 201 }
+        )
 
     } catch (err) {
-
         return NextResponse.json({ message: err.message }, { status: 500 })
     }
 

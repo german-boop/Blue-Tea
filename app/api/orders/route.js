@@ -3,6 +3,7 @@ import connectToDB from '@/db/db'
 import { authAdmin } from '@/utils/auth'
 import { orderSchema } from '@/validators/order'
 import { NextResponse } from 'next/server'
+import { paginate } from '@/utils/helper'
 
 export async function GET(req) {
     try {
@@ -18,7 +19,8 @@ export async function GET(req) {
             searchParams,   // searchParams
             {},             // filter
             null,           // populate
-            useCursor       // cursor | pagination
+            useCursor,
+            true      // cursor | pagination
         );
         return NextResponse.json(result, { status: 200 });
     }
@@ -26,7 +28,6 @@ export async function GET(req) {
     catch (err) {
         return NextResponse.json({ message: "UNKNOWN ERROR" }, { status: 500 });
     }
-
 }
 export async function POST(req) {
     try {
@@ -43,7 +44,6 @@ export async function POST(req) {
                 { status: 400 }
             );
         }
-
         const newOrder = await orderModal.create(parsed.data);
         return NextResponse.json({ message: "Order Created Successfully", newOrder }, { status: 200 })
 

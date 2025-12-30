@@ -2,11 +2,12 @@ import connectToDB from "@/db/db"
 import contactModel from "@/model/contact"
 import { contactValidationSchema } from "@/validators/contact"
 import { getMe } from "@/utils/auth"
+import { paginate } from "@/utils/helper"
 import { NextResponse } from "next/server"
 import { authAdmin } from "@/utils/auth"
 export async function GET(req) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This API is protected")
 
@@ -18,7 +19,8 @@ export async function GET(req) {
             searchParams,   // searchParams
             {},             // filter
             null,           // populate
-            useCursor       // cursor | pagination
+            useCursor,
+            true     // cursor | pagination
         );
         return NextResponse.json(result, { status: 200 });
     } catch (err) {
@@ -28,7 +30,7 @@ export async function GET(req) {
 
 export async function POST(req) {
     try {
-        connectToDB()
+        await connectToDB()
         const user = await getMe()
         if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 

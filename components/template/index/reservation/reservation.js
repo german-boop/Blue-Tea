@@ -3,7 +3,7 @@ import React from 'react'
 import { useEffect, useState } from 'react'
 import styles from "./reservation.module.css"
 import { useActionState } from 'react'
-import { NewReservation } from '@/utils/useServerAction'
+import { NewReservation } from '@/utils/actions/reservationActionServer'
 import Modal from '@/components/modules/modal/editModal'
 import { MotionDiv } from '@/utils/animate'
 export default function Reservation() {

@@ -3,15 +3,14 @@ import ProductModel from "@/model/product";
 import { isValidObjectId } from "mongoose";
 import { productSchema } from "@/validators/product";
 import { authAdmin } from "@/utils/auth";
-import { writeFile } from "fs/promises";
+import handleFileUpload from "@/utils/serverFile";
 import { NextResponse } from "next/server";
-import path from "path";
 
 /* ===================== GET ===================== */
 export async function GET(req, { params }) {
     try {
         await connectToDB();
-        const { id } = params;
+        const { id } = await params;
         if (!isValidObjectId(id)) return NextResponse.json({ message: "Invalid ID" }, { status: 422 });
 
         const product = await ProductModel.findById(id).lean();
@@ -31,7 +30,7 @@ export async function DELETE(req, { params }) {
         const admin = await authAdmin();
         if (!admin) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        const { id } = params;
+        const { id } = await params;
         if (!isValidObjectId(id)) return NextResponse.json({ message: "Invalid ID" }, { status: 422 });
 
         await ProductModel.findByIdAndDelete(id);
@@ -51,7 +50,11 @@ export async function PUT(req, { params }) {
         if (!admin) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const { id } = await params;
+       
         if (!isValidObjectId(id)) return NextResponse.json({ message: "Invalid ID" }, { status: 422 });
+       
+        const currentProduct = await ProductModel.findById(id);
+        if (!currentProduct) return NextResponse.json({ message: "Product not found" }, { status: 404 });
 
         const formData = await req.formData();
         const body = Object.fromEntries(formData.entries());
@@ -64,8 +67,6 @@ export async function PUT(req, { params }) {
         if (body.size) {
             body.size = body.size.split(",").map(s => s.trim());
         }
-        console.log(body);
-        
 
         // PUT => partial validation
         const parsed = productSchema.partial().safeParse(body);
@@ -77,23 +78,13 @@ export async function PUT(req, { params }) {
         }
 
         /* optional image upload */
-        const img = formData.get("img");
-        let imageUrl;
-
-        if (img && typeof img === "object" && img.size > 0) {
-            const buffer = Buffer.from(await img.arrayBuffer());
-            const filename = Date.now() + "-" + img.name;
-            await writeFile(
-                path.join(process.cwd(), "public/uploads", filename),
-                buffer
-            );
-            imageUrl = `/uploads/${filename}`;
-        }
+        const img = await handleFileUpload(formData.get("img")) || currentProduct.img;
+        if (!img) return NextResponse.json({ message: "Image is required" }, { status: 400 });
 
         await ProductModel.findByIdAndUpdate(id, {
             $set: {
                 ...parsed.data,
-                ...(imageUrl && { img: imageUrl }),
+                img,
             },
         });
 

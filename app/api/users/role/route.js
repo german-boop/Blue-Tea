@@ -11,12 +11,9 @@ export async function PUT(req) {
         if (!admin) throw new Error("This API is Protected");
 
         const { userID } = await req.json();
-
-        // پیدا کردن کاربر
         const user = await UserModal.findById(userID);
         if (!user) return NextResponse.json({ message: "User Not Found" }, { status: 404 });
 
-        // تغییر نقش
         const newRole = user.role === "ADMIN" ? "USER" : "ADMIN";
         await UserModal.findByIdAndUpdate(userID, { $set: { role: newRole } });
 

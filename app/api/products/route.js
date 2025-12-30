@@ -2,15 +2,14 @@ import connectToDB from "@/db/db";
 import ProductModal from "@/model/product";
 import CategoryModel from "@/model/category";
 import { authAdmin } from "@/utils/auth";
-import path from "path";
-import { writeFile } from "fs/promises";
 import { productSchema } from "@/validators/product";
+import { paginate } from "@/utils/helper";
+import handleFileUpload from "@/utils/serverFile";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
     try {
         await connectToDB();
-
         const { searchParams } = new URL(req.url);
         const useCursor = searchParams.has("cursor");
 
@@ -29,7 +28,8 @@ export async function GET(req) {
             searchParams,
             filter,
             null,
-            useCursor
+            useCursor,
+            true
         );
 
         return NextResponse.json(result, { status: 200 });
@@ -41,7 +41,7 @@ export async function GET(req) {
 
 export async function POST(req) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -57,25 +57,20 @@ export async function POST(req) {
         if (!parsed.success)
             return NextResponse.json({ errors: parsed.error.flatten().fieldErrors }, { status: 400 });
 
-        const img = formData.get("img");
-        if (!img) return NextResponse.json({ message: "Image is required" }, { status: 400 });
-
-        const buffer = Buffer.from(await img.arrayBuffer());
-        const filename = Date.now() + img.name;
-        await writeFile(path.join(process.cwd(), "public/uploads/" + filename), buffer);
-
         const isProductExist = await ProductModal.findOne({ name: body.name });
         if (isProductExist)
             return NextResponse.json({ message: "This Product Already Exists :(" }, { status: 409 });
 
+        const img = await handleFileUpload(formData.get("img")) || "";
+        if (!img) return NextResponse.json({ message: "Image is required" }, { status: 400 });
+
         await ProductModal.create({
             ...parsed.data,
-            img: `http://localhost:3000/uploads/${filename}`,
+            img,
             isAvailable: true
         });
 
         return NextResponse.json({ message: "Product Created Successfully" }, { status: 200 })
-
     } catch (err) {
         return NextResponse.json({ message: "Unknown Error" }, { status: 500 })
     }

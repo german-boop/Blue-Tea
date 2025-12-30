@@ -1,24 +1,13 @@
 import React from 'react'
-import CategoryModel from '@/model/category'
 import connectToDB from '@/db/db'
 import AddNewProduct from '@/components/template/p-admin/products/addNewProduct'
+import { handleTree } from '@/utils/tree'
 export default async function page() {
-    connectToDB()
-    const categories = await CategoryModel.find({}).lean()
-    const tree = []
+    await connectToDB()
+    const tree = await handleTree()
+    const serializedTree = JSON.parse(JSON.stringify(tree))
+    console.log("Tree Length:", JSON.stringify(tree).length); // ببین حجم دیتا چقدر است
 
-    const buildChildren = (parent) => {
-        const children = [...categories].filter(cat => cat.parentId?.toString() === parent._id.toString())
-            .map(cat => ({ ...cat, children: buildChildren(cat) }));
-
-        return children
-    }
-
-    categories.filter(parent => {
-        if (!parent.parentId) {
-            tree.push({ ...parent, children: buildChildren(parent._id) })
-        }
-    })
     return (
         <>
             <h4 className='fw-bold'
@@ -26,8 +15,7 @@ export default async function page() {
                 Create New Product
             </h4>
             <div className="transparentCard">
-                <AddNewProduct
-                    tree={JSON.parse(JSON.stringify(tree))} />
+               <AddNewProduct tree={serializedTree || []}/>
             </div>
         </>
     )

@@ -5,7 +5,6 @@ export const showToast = (message, type = "default") => {
   else if (type === "destructive") toast.error(message);
   else toast(message);
 };
-
 export const manageError = (error) => {
   let message = null
   if (error === 400) message = "Please fill out required fields correctly.";
@@ -20,29 +19,54 @@ export const manageError = (error) => {
   toast.error(message);
 };
 
+export async function paginate(Model, searchParams, filter = {}, populate = null, useCursor = false, route = false) {
+  let limit, page, cursor;
 
-
-export async function paginate(Model, searchParams, filter = {}, populate, useCursor = false) {
+  if (route) {
+    limit = Number(searchParams.get("limit")) || 15;
+    page = Number(searchParams.get("page")) || 1;
+    cursor = searchParams.get("cursor");
+  } else {
+    limit = Number(searchParams.limit) || 15;
+    page = Number(searchParams.page) || 1;
+    cursor = searchParams.cursor;
+  }
 
   if (useCursor) {
-    const cursor = searchParams.get("cursor");
-    const limit = Number(searchParams.get("limit")) || 15
-    const query = cursor ? { ...filter, _id: { $gt: cursor } } : filter;
-    const data = await Model.find(query).sort({ _id: 1 }).limit(limit + 1).populate(populate).lean();
+    const query = cursor ? { ...filter, _id: { $gt: cursor } } : { ...filter };
+
+    const data = await Model.find(query)
+      .sort({ _id: 1 })
+      .limit(limit + 1)
+      .populate(populate)
+      .lean();
+
     const hasNextPage = data.length > limit;
     if (hasNextPage) data.pop();
+
     const nextCursor = hasNextPage ? data[data.length - 1]._id.toString() : null;
 
     return { data, nextCursor, limit };
+  } else {
+    const skip = (page - 1) * limit;
+    const totalCount = await Model.countDocuments(filter);
+
+    const data = await Model.find(filter)
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate(populate)
+      .lean();
+
+    const pageCount = Math.ceil(totalCount / limit);
+    return { data, totalCount, pageCount, page, limit };
   }
-  const page = Number(searchParams.page) || 1;
-  const limit = Number(searchParams.limit) || 20;
-
-  const skip = (page - 1) * limit;
-  const totalCount = await Model.countDocuments(filter);
-
-  const data = await Model.find(filter).sort({ _id: -1 }).skip(skip).limit(limit).populate(populate).lean();
-  const pageCount = Math.ceil(totalCount / limit);
-  return { data, totalCount, pageCount, page, limit };
-
 }
+
+export const createResponse = (status, message, data = null, errors = null) => ({
+  status,
+  message,
+  data,
+  errors
+});
+

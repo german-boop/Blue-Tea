@@ -1,6 +1,7 @@
 import CategoryModel from "@/model/category";
 import ProductModal from "@/model/product";
 import connectToDB from "@/db/db";
+import { paginate } from "@/utils/helper";
 import Product from "@/components/modules/product/product";
 import Link from "next/link";
 export async function generateMetadata({ searchParams }) {
@@ -35,11 +36,8 @@ export async function generateMetadata({ searchParams }) {
     };
 } export default async function page({ searchParams }) {
     connectToDB()
-    const limit = Number(searchParams.limit) || 15;
-    const cursor = searchParams.cursor || null;
-
-    const categoryName = searchParams.category
-
+    const params = await searchParams
+    const categoryName = await params.category
     let categoryId;
 
     if (categoryName) {
@@ -47,23 +45,7 @@ export async function generateMetadata({ searchParams }) {
         if (category) categoryId = category._id;
     }
 
-
-    const query = cursor
-        ? { _id: { $gt: cursor }, category: categoryId }
-        : { category: categoryId };
-
-    const products = await ProductModal
-        .find(query)
-        .sort({ _id: 1 })
-        .limit(limit + 1)
-        .lean();
-
-    const hasNextPage = products.length > limit;
-    if (hasNextPage) products.pop();
-
-    const nextCursor = hasNextPage
-        ? products[products.length - 1]._id.toString()
-        : null;
+    const paginatedData = await paginate(ProductModal, params, categoryId, null, true, false)
 
 
     return (
@@ -75,7 +57,7 @@ export async function generateMetadata({ searchParams }) {
                 </div>
                 <div className="container">
                     <div className="row">
-                        {JSON.parse(JSON.stringify(products)).map((item, index) => (
+                        {paginatedData.data.map((item, index) => (
                             <Product
                                 key={index + 1}
                                 id={item._id}
@@ -89,11 +71,11 @@ export async function generateMetadata({ searchParams }) {
                     </div>
                 </div>
             </div>
-            {nextCursor && (
+            {paginatedData.nextCursor && (
                 <div className="mt-4 text-center">
                     <Link
                         className='classic'
-                        href={`/products?category=${categoryName}&cursor=${nextCursor}&limit=${limit}`}>
+                        href={`/products?category=${categoryName}&cursor=${paginatedData.nextCursor}&limit=${paginatedData.limit}`}>
                         Load more
                     </Link>
                 </div>

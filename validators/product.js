@@ -22,7 +22,7 @@ export const productSchema = z.object({
     tags: z
         .array(z.string().min(2))
         .max(20, "You can only define up to 20 tags"),
-    size: z
+    variants: z
         .array(z.string().min(1))
         .max(3, "You can only define up to 20 tags"),
 

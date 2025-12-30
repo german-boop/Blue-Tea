@@ -39,7 +39,17 @@ const MenuItemSchema = new mongoose.Schema(
             required: false,
         },
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+        toJSON: {
+            transform(doc, ret) {
+                ret.id = ret._id.toString();
+                delete ret._id;
+                delete ret.__v;
+                return ret;
+            },
+        }
+    }
 );
 
 const menuItemModel = mongoose.models.MenuItem || mongoose.model("MenuItem", MenuItemSchema);

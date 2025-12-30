@@ -26,14 +26,11 @@ export async function POST(req) {
                 { status: 409 }
             )
         }
-
         await CategoryModel.create({
             name, slug, parentId
         })
-
         return NextResponse.json({ message: "Category created Successfully" }, { status: 200 })
     } catch (err) {
         return NextResponse.json({ message: "UnKnown Error" }, { status: 500 })
     }
-
 }

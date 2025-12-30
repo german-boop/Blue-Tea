@@ -2,14 +2,18 @@ import connectToDB from "@/db/db"
 import UserModal from "@/model/user"
 import { authAdmin, verifyPassword, hashPassword } from "@/utils/auth"
 import { userValidationSchema } from "@/validators/user"
-import { writeFile } from "fs/promises"
-import path from "path"
+import { authUser } from "@/utils/auth"
 import { isValidObjectId } from "mongoose"
+import handleFileUpload from "@/utils/serverFile"
 import { NextResponse } from "next/server"
 
 export async function PUT(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
+
+        const isUser = await authUser();
+        if (!isUser) throw new Error("This API is Protected");
+
         const { id } = await params
 
         if (!isValidObjectId(id))
@@ -25,7 +29,6 @@ export async function PUT(req, { params }) {
         const password = formData.get("password")
         const newPassword = formData.get("newPassword")
         const confirmPassword = formData.get("confirmPassword")
-        const avatar = formData.get("avatar")
 
         if (newPassword && newPassword !== confirmPassword)
             return NextResponse.json({ message: "Passwords Do Not Match" }, { status: 422 })
@@ -40,18 +43,12 @@ export async function PUT(req, { params }) {
         let hashedPassword = user.password
         if (newPassword) hashedPassword = await hashPassword(confirmPassword)
 
-        let avatarUrl = user.avatar
-        if (avatar) {
-            const buffer = Buffer.from(await avatar.arrayBuffer())
-            const filename = Date.now() + avatar.name
-            await writeFile(path.join(process.cwd(), "public/uploads/" + filename), buffer)
-            avatarUrl = `http://localhost:3000/uploads/${filename}`
-        }
+        const avatar = await handleFileUpload(formData.get("avatar")) || "";
 
         await UserModal.findByIdAndUpdate(id, {
             $set: {
                 ...parsed.data,
-                avatar: avatarUrl,
+                avatar,
                 password: hashedPassword
             }
         })
@@ -59,14 +56,13 @@ export async function PUT(req, { params }) {
         return NextResponse.json({ message: "User Updated Successfully" }, { status: 200 })
 
     } catch (err) {
-
         return NextResponse.json({ message: "Unknown Error" }, { status: 500 })
     }
 }
 
 export async function DELETE(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This API Protected")
 

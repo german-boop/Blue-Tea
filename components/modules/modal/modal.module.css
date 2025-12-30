@@ -13,7 +13,7 @@
 
 /* Modal */
 .edit_modal {
-    background: var(--green-dark);
+    background: var(--background);
     padding: 30px 25px;
     border-radius: 20px;
     width: 450px;

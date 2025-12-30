@@ -46,7 +46,17 @@ const ReservationSchema = new mongoose.Schema(
             default: "pending",
         },
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+        toJSON: {
+            transform(doc, ret) {
+                ret.id = ret._id.toString();
+                delete ret._id;
+                delete ret.__v;
+                return ret;
+            },
+        }
+    }
 );
 
 const reservationModal = mongoose.models.Reservation ||

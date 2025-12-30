@@ -2,13 +2,14 @@ import connectToDB from "@/db/db";
 import commentModel from "@/model/comment";
 import { getMe } from "@/utils/auth";
 import ProductModal from "@/model/product";
+import { paginate } from "@/utils/helper";
 import { commentValidationSchema } from "@/validators/comment";
 import { NextResponse } from "next/server";
 export async function GET(req, { params }) {
     try {
         await connectToDB();
 
-        const { id } = params;
+        const { id } = await params;
         const { searchParams } = new URL(req.url);
 
         const product = await ProductModal.findById(id).lean();
@@ -25,7 +26,8 @@ export async function GET(req, { params }) {
             searchParams,               // searchParams
             { productID: product._id }, // filter
             null,                       // populate
-            useCursor                   // cursor /page
+            useCursor ,
+            true                  // cursor /page
         );
 
         return NextResponse.json(result, { status: 200 });

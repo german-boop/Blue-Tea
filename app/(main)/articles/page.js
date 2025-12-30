@@ -4,28 +4,11 @@ import ArticleModel from '@/model/article'
 import Image from 'next/image'
 import Link from 'next/link'
 import styles from '@/components/template/index/articles/articles.module.css';
-
+import { paginate } from '@/utils/helper'
 export default async function page({ searchParams }) {
     await connectToDB()
-    const limit = Number(searchParams.limit) || 15;
-    const cursor = searchParams.cursor || null;
-    const query = {};
-    if (cursor) query._id = { $gt: cursor };
-
-    const articles = await ArticleModel
-        .find(query)
-        .sort({ _id: 1 })
-        .limit(limit + 1)
-        .lean();
-
-    const hasNextPage = articles.length > limit;
-    if (hasNextPage) articles.pop();
-
-    const nextCursor = hasNextPage
-        ? articles[articles.length - 1]._id.toString()
-        : null;
-
-
+    const searchparams = await searchParams
+    const paginatedData = await paginate(ArticleModel, searchparams, {}, null, true, false)
 
     return (
         <div className="py-5">
@@ -34,7 +17,7 @@ export default async function page({ searchParams }) {
             </div>
             <div className="container">
                 <div className="row gap-5 align-items-center justify-content-center">
-                    {articles.map((a) => (
+                    {paginatedData.data.map((a) => (
                         <div key={a._id} className="col-md-3">
                             <div className={styles.article_image_wrap}>
                                 <Image
@@ -55,11 +38,11 @@ export default async function page({ searchParams }) {
                     ))}
                 </div>
             </div>
-            {nextCursor && (
+            {paginatedData.nextCursor && (
                 <div className="mt-4 text-center">
                     <Link
                         className='classic'
-                        href={`/articles?cursor=${nextCursor}&limit=${limit}`}>
+                        href={`/articles?cursor=${paginatedData.nextCursor}&limit=${paginatedData.limit}`}>
                         Load more
                     </Link>
                 </div>

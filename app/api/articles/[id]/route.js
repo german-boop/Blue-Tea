@@ -2,15 +2,13 @@ import ArticleModel from "@/model/article"
 import connectToDB from "@/db/db"
 import { isValidObjectId } from "mongoose"
 import { authAdmin } from "@/utils/auth"
-import { writeFile } from "fs/promises"
 import { articleSchema } from "@/validators/article"
-import path from "path"
+import handleFileUpload from "@/utils/serverFile"
 import { NextResponse } from "next/server"
-import { log } from "console"
 
 export async function GET(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -31,7 +29,7 @@ export async function GET(req, { params }) {
 
 export async function DELETE(req, { params }) {
     try {
-        connectToDB()
+        await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
 
@@ -49,7 +47,7 @@ export async function DELETE(req, { params }) {
 
 
 export async function PUT(req, { params }) {
-    connectToDB();
+    await connectToDB();
     try {
         const admin = await authAdmin();
         if (!admin) throw new Error("This api Protected");
@@ -73,30 +71,20 @@ export async function PUT(req, { params }) {
             );
         }
 
-        const cover = formData.get("cover");
-        let coverUrl = existingArticle.cover;
-        if (cover && cover.size) {
-            const buffer = Buffer.from(await cover.arrayBuffer());
-            const filename = Date.now() + "-" + cover.name;
-            await writeFile(path.join(process.cwd(), "public/uploads/" + filename), buffer);
-            coverUrl = `/uploads/${filename}`;
-        }
+        const cover = await handleFileUpload(formData.get("cover")) || existingArticle.cover;
 
         await ArticleModel.findOneAndUpdate(
             { _id: id },
             {
                 $set: {
                     ...parsed.data,
-                    cover: coverUrl
-
+                    cover
                 },
             }
         );
 
         return NextResponse.json({ message: "Article Updated" }, { status: 200 });
     } catch (err) {
-        console.log(err);
-
         return NextResponse.json({ message: "UnKnown Error" }, { status: 500 });
     }
 }

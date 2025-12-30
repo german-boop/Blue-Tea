@@ -43,9 +43,21 @@ const schema = new mongoose.Schema({
         type: [String],
         required: false,
     },
+},
 
+    {
+        timestamps: true,
+        toJSON: {
+            transform(doc, ret) {
+                ret.id = ret._id.toString();
+                delete ret._id;
+                delete ret.__v;
+                return ret;
+            },
+        }
+    }
 
-});
+);
 
 const ProductModal = mongoose.models.Product || mongoose.model("Product", schema)
 

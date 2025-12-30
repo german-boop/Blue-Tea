@@ -1,17 +1,16 @@
 "use client"
-import { NewArticle } from '@/utils/useServerAction';
-import React, { useState, useEffect } from 'react'
+import { NewArticle } from '@/utils/actions/articleServerAction';
+import React, { useState, useEffect, useRef } from 'react'
 import { useActionState } from "react";
 import swal from 'sweetalert';
 import RichEditor from './RichEditor';
-import { useRouter } from 'next/navigation';
 
 export default function AddNewArticle({ article }) {
-    const router = useRouter();
+    const formRef = useRef(null);
     const [content, setContent] = useState(article?.content || "");
-    const [state, formAction] = useActionState(NewArticle, {
-        message: "",
-        error: undefined,
+    const [state, formAction, isPending] = useActionState(NewArticle, {
+        status: null,
+        message: null,
         fields: {
             title: article?.title || "",
             author: article?.author || "",
@@ -22,34 +21,21 @@ export default function AddNewArticle({ article }) {
     });
 
     useEffect(() => {
-        if (state.message === "success") {
-            swal({
-                title: "Article Saved Successfully :)",
-                icon: "success",
-                buttons: "ok",
-            }).then(() => router.replace("/p-admin/articles"));
-        } else if (state.message === "error") {
-            swal({
-                title: "Please fill out required fields :(",
-                icon: "warning",
-                buttons: "ok",
-            });
+        if (state?.status === 201 || state.status === 200) {
+            toast.success("article added Successfully :)")
+            formRef.current?.reset();
         }
-    }, [state.message]);
+    }, [state]);
 
     const handleSubmit = async (formData) => {
         if (article?._id) formData.set("_id", article._id);
-        if (!formData.get("content")) formData.set("content", article?.content || "");
-        if (!formData.get("title")) formData.set("title", article?.title || "");
-        if (!formData.get("author")) formData.set("author", article?.author || "");
-        if (!formData.get("shortDescription")) formData.set("shortDescription", article?.shortDescription || "");
-        if (!formData.get("cover") && article?.cover) formData.set("cover", article.cover);
-
+        formData.set("content", content);
         await formAction(formData);
     }
 
     return (
         <form
+            ref={formRef}
             action={handleSubmit}
             className="row g-3" >
             <div className="col-md-6">
@@ -61,6 +47,9 @@ export default function AddNewArticle({ article }) {
                     className="form-control"
                     required
                 />
+                {state?.errors?.title && (
+                    <span className="text-sm text-red-500">{state.errors.title[0]}</span>
+                )}
             </div>
 
             <div className="col-md-6">
@@ -72,6 +61,9 @@ export default function AddNewArticle({ article }) {
                     className="form-control"
                     required
                 />
+                {state?.errors?.author && (
+                    <span className="text-sm text-red-500">{state.errors.author[0]}</span>
+                )}
             </div>
 
             <div className="col-12">
@@ -83,13 +75,18 @@ export default function AddNewArticle({ article }) {
                     className="form-control"
                     required
                 />
+                {state?.errors?.shortDescription && (
+                    <span className="text-sm text-red-500">{state.errors.shortDescription[0]}</span>
+                )}
             </div>
 
             <div className="col-12">
                 <RichEditor value={content} onChange={setContent} />
                 <input type="hidden" name="content" value={content} />
+                {state?.errors?.content && (
+                    <span className="text-sm text-red-500">{state.errors.content[0]}</span>
+                )}
             </div>
-
             <div className="col-md-6">
                 <label className="form-label">Cover Image</label>
                 <input
@@ -98,15 +95,22 @@ export default function AddNewArticle({ article }) {
                     className="form-control"
                 />
             </div>
-
             <div className="col-12 d-flex gap-2 mt-4 justify-content-end">
-                <button type="submit" name="status" value="unpublish" className="classic">
-                    Save Draft
+                <button type="submit"
+                    name="status"
+                    value="unpublish"
+                    className="classic" disabled={isPending}
+                >
+                    {isPending ? "Saving..." : "Save Draft"}
                 </button>
-                <button type="submit" name="status" value="publish" className="edit">
-                    Publish
+                <button
+                    type="submit"
+                    name="status"
+                    value="publish"
+                    className="edit" disabled={isPending}
+                >
+                    {isPending ? "Publishing..." : "Publish"}
                 </button>
-                <button type="reset" className="remove">Reset</button>
             </div>
         </form>
     )
