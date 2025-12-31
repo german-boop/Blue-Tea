@@ -1,9 +1,10 @@
-import ReservationClient from "@/components/template/account/reservation/reservationClient"
+import React from 'react'
 import UserPanelLayout from "../UserPanelLayout"
+import CommentsClient from '@/components/template/account/comments/commentsClient'
 export default function page() {
     return (
         <UserPanelLayout>
-            <ReservationClient />
+            <CommentsClient />
         </UserPanelLayout>
     )
 }

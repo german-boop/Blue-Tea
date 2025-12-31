@@ -6,7 +6,7 @@ export const useGet = (endpoint, params = {}, options = {}) => {
     return useQuery({
         queryKey,
         queryFn: async () => {
-            const { data } = await privateApi.get(endpoint, { params });
+            const { data } = await privateApi.get(endpoint, { params });            
             return data;
         },
         staleTime: 5 * 60 * 1000,

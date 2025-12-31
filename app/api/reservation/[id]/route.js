@@ -1,21 +1,38 @@
 import connectToDB from "@/db/db"
 import { isValidObjectId } from "mongoose"
 import reservationModal from "@/model/reservation"
+import { paginate } from "@/utils/helper"
 import { reservationValidationSchema } from "@/validators/reservation"
-import { authAdmin } from "@/utils/auth"
+import { authAdmin, authUser } from "@/utils/auth"
 import { NextResponse } from "next/server"
 
 export async function GET(req, { params }) {
     try {
         await connectToDB()
+        const user = await authUser()
+        if (!user) throw ("This Api Protected")
+
         const { id } = await params
         const isvalidId = isValidObjectId(id)
         if (!isvalidId) return NextResponse.json({ message: "Not Valid :)" }, { satatus: 422 })
 
-        const reservation = await reservationModal.findOne({ _id: id })
-        return NextResponse.json(reservation, { status: 200 })
+        const { searchParams } = new URL(req.url);
+        const useCursor = searchParams.has("cursor");
+
+        const result = await paginate(
+            reservationModal,   // Model
+            searchParams,   // searchParams
+            { userID: id },             // filter
+            null,           // populate
+            useCursor,
+            true      // cursor | pagination
+        );
+
+        return NextResponse.json(result, { status: 200 })
 
     } catch (err) {
+        console.log(err);
+        
         return NextResponse.json({ message: "UnKnown Error" }, { status: 500 })
     }
 }

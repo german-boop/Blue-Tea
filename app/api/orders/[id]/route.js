@@ -23,7 +23,8 @@ export async function DELETE(req, { params }) {
         await connectToDB()
         const admin = await authAdmin()
         if (!admin) throw new Error("This api Protected")
-        const { id } = params
+        
+            const { id } = params
         if (!isValidObjectId(id)) return NextResponse.json({ message: "Not Valid :)" }, { status: 422 })
 
         await orderModal.findOneAndDelete({ _id: id })

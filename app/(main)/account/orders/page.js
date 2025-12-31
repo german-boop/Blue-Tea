@@ -1,9 +1,10 @@
-import ReservationClient from "@/components/template/account/reservation/reservationClient"
+import React from 'react'
 import UserPanelLayout from "../UserPanelLayout"
+import OrderClinet from '@/components/template/account/orders/orderClinet'
 export default function page() {
     return (
         <UserPanelLayout>
-            <ReservationClient />
+            <OrderClinet />
         </UserPanelLayout>
     )
 }

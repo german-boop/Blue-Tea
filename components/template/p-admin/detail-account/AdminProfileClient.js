@@ -21,7 +21,6 @@ export default function AdminProfileClient({ adminData }) {
     const {
         register: formRegister,
         handleSubmit,
-        setValue,
         formState: { errors },
     } = useForm({
         resolver: zodResolver(userValidationSchema),
@@ -52,91 +51,99 @@ export default function AdminProfileClient({ adminData }) {
 
     return (
         <>
-            <form
-                className="row g-3"
-                onSubmit={handleSubmit(onSubmit)}
-                noValidate
-            >
-                {/* Name & Email */}
-                <div className="col-md-12">
-                    <label className="form-label">Name</label>
-                    <input
-                        type="text"
-                        name="name"
-                        className="form-control"
-                        {...formRegister("name")}
-                        required
-                    />
-                </div>
-                <div className="col-md-12">
-                    <label className="form-label">Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        className="form-control"
-                        {...formRegister("email")}
-                        required
-                    />
-                </div>
-                <div className="col-md-12">
-                    <label className="form-label">Phone</label>
-                    <input
-                        type="text"
-                        name="phone"
-                        className="form-control"
-                        {...formRegister("phone")}
-                        required
-                    />
-                </div>
 
-                {/* Avatar */}
-                <div className="col-md-12">
-                    <label className="form-label">Profile Picture</label>
-                    <input
-                        type="file"
-                        name="avatar"
-                        accept="image/*"
-                        className="form-control"
-                        ref={fileInputRef}
-                    />
-                </div>
+            <h4 className='fw-bold'
+                style={{ color: "var(--brown-light)", marginBottom: "1rem" }}>
+                Detail Account
+            </h4>
+            <div className="transparentCard">
+                <form
+                    className="row g-3"
+                    onSubmit={handleSubmit(onSubmit)}
+                    noValidate
+                >
+                    {/* Name & Email */}
+                    <div className="col-md-12">
+                        <label className="form-label">Name</label>
+                        <input
+                            type="text"
+                            name="name"
+                            className="form-control"
+                            {...formRegister("name")}
+                            required
+                        />
+                    </div>
+                    <div className="col-md-12">
+                        <label className="form-label">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            className="form-control"
+                            {...formRegister("email")}
+                            required
+                        />
+                    </div>
+                    <div className="col-md-12">
+                        <label className="form-label">Phone</label>
+                        <input
+                            type="text"
+                            name="phone"
+                            className="form-control"
+                            {...formRegister("phone")}
+                            required
+                        />
+                    </div>
 
-                {/* Change Password */}
-                <div className="col-md-4">
-                    <label className="form-label">Old Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        className="form-control"
-                        {...formRegister("password")}
+                    {/* Avatar */}
+                    <div className="col-md-12">
+                        <label className="form-label">Profile Picture</label>
+                        <input
+                            type="file"
+                            name="avatar"
+                            accept="image/*"
+                            className="form-control"
+                            ref={fileInputRef}
+                        />
+                    </div>
 
-                    />
-                </div>
-                <div className="col-md-4">
-                    <label className="form-label">New Password</label>
-                    <input
-                        type="password"
-                        name="newPassword"
-                        className="form-control"
-                        {...formRegister("newPassword")}
+                    {/* Change Password */}
+                    <div className="col-md-4">
+                        <label className="form-label">Old Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            className="form-control"
+                            {...formRegister("password")}
 
-                    />
-                </div>
-                <div className="col-md-4">
-                    <label className="form-label">Confirm New Password</label>
-                    <input
-                        type="password"
-                        name="confirmPassword"
-                        className="form-control"
-                        {...formRegister("confirmPassword")}
-                    />
-                </div>
+                        />
+                    </div>
+                    <div className="col-md-4">
+                        <label className="form-label">New Password</label>
+                        <input
+                            type="password"
+                            name="newPassword"
+                            className="form-control"
+                            {...formRegister("newPassword")}
 
-                <div className="col-12 d-flex gap-2 justify-content-end mt-3">
-                    <button type="submit" className="edit">Save</button>
-                    <button type="reset" className="remove">Reset</button>
-                </div>
-            </form>
+                        />
+                    </div>
+                    <div className="col-md-4">
+                        <label className="form-label">Confirm New Password</label>
+                        <input
+                            type="password"
+                            name="confirmPassword"
+                            className="form-control"
+                            {...formRegister("confirmPassword")}
+                        />
+                    </div>
+
+                    <div className="col-12 d-flex gap-2 justify-content-end mt-3">
+                        <button type="submit" className="edit">Save</button>
+                        <button type="reset" className="remove">Reset</button>
+                    </div>
+                </form>
+            </div>
+
         </>
     );
 }

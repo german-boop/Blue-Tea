@@ -1,38 +1,42 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-export default function RefreshAccessToken({ shouldRefresh,children }) {
+import RouteSkeleton from "@/components/feedBack/RouteSkeleton";
+import { useRouter } from "next/navigation";
+export default function RefreshAccessToken({ shouldRefresh, children }) {
     const [loading, setLoading] = useState(true);
+    const router = useRouter()
 
     useEffect(() => {
-        if (!shouldRefresh) return false
+        if (!shouldRefresh) {
+            setLoading(false);
+            return;
+        }
         const refresh = async () => {
             try {
-                await axios.post(
+                const response = await axios.post(
                     "/api/auth/refresh",
                     {},
-                    { withCredentials: true }
-                );
+                    { withCredentials: true });
+                if (response.status === 200 || response.status === 201) {
+                    router.refresh()
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 1000);
+                }
             } catch (err) {
+                console.error("Refresh API Error Details:", err.response?.data || err.message);
                 window.location.href = "/";
-            } finally {
-                setLoading(false);
             }
         };
-
         refresh()
-    }, [shouldRefresh]);
+    }, [shouldRefresh,router]);
 
     if (loading) {
         return (
-            <div className="d-flex justify-content-center align-items-center vh-100">
-                <span className="spinner-border text-success"></span>
-            </div>
+            <RouteSkeleton />
         );
     }
 
     return children
-
 }

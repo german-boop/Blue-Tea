@@ -1,6 +1,7 @@
 import connectToDB from "@/db/db";
 import { authAdmin } from "@/utils/auth";
 import commentModel from "@/model/comment";
+import { paginate } from "@/utils/helper";
 import { isValidObjectId } from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -9,11 +10,22 @@ export async function GET(req, { params }) {
         connectToDB();
         const { id } = await params;
 
-        if (!isValidObjectId(id)) 
+        if (!isValidObjectId(id))
             return NextResponse.json({ message: "Not valid ID" }, { status: 422 });
 
-        const comment = await commentModel.findOne({ _id: id });
-        return NextResponse.json({ comment }, { status: 200 });
+        const { searchParams } = new URL(req.url);
+        const useCursor = searchParams.has("cursor");
+
+        const result = await paginate(
+            commentModel,   // Model
+            searchParams,   // searchParams
+            {userID:id},             // filter
+            null,           // populate
+            useCursor,
+            true     // cursor | pagination
+        );
+
+        return NextResponse.json(result, { status: 200 });
     } catch (err) {
         return NextResponse.json({ message: "Unknown error" }, { status: 500 });
     }
@@ -27,7 +39,7 @@ export async function PUT(req, { params }) {
 
         const { id } = await params;
 
-        if (!isValidObjectId(id)) 
+        if (!isValidObjectId(id))
             return NextResponse.json({ message: "Not valid ID" }, { status: 422 });
 
         const { content } = await req.json();
@@ -51,7 +63,7 @@ export async function DELETE(req, { params }) {
 
         const { id } = await params;
 
-        if (!isValidObjectId(id)) 
+        if (!isValidObjectId(id))
             return NextResponse.json({ message: "Not valid ID" }, { status: 422 });
 
         await commentModel.findOneAndDelete({ _id: id });

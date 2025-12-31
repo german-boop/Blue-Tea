@@ -1,70 +1,66 @@
-import React from 'react'
+"use client"
+import React, { useContext } from 'react'
 import Table from '@/components/modules/table/Table'
-import connectToDB from '@/db/db'
-import { FaRegEdit } from "react-icons/fa";
 import Pagination from '@/components/modules/pagination/pagination'
-import reservationModal from '@/model/reservation';
+import { FaRegEdit } from "react-icons/fa";
+import { UserContext } from '@/utils/context/userProvider';
+import { useGet } from '@/utils/hooks/useReactQueryPublic';
+export default function ReservationClient() {
+    const { user } = useContext(UserContext);
+    const userId = user?.id || user?._id;
 
-export default async function page({ searchParams }) {
-    connectToDB()
-    const paginatedData = await paginate(reservationModal, searchParams)
-
+    const { data, isLoading } = useGet(
+        `/reservation/${userId}`,
+        {},
+        { enabled: !!userId }
+    );
+    if (isLoading) return <span>Loading .....</span>
+   
     return (
         <>
             <Table>
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
                         <th>Date</th>
                         <th>Time</th>
                         <th>Guests</th>
-                        <th>Notes</th>
                         <th>Status</th>
+                        <th>Notes</th>
                         <th><FaRegEdit /></th>
+
                     </tr>
                 </thead>
                 <tbody>
-                    {JSON.parse(JSON.stringify(paginatedData.data)).map((r, index) => (
+                    {data ? data.data.map((r, index) => (
                         <tr key={index + 1}>
                             <td className="number">
                                 <span>{index + 1}</span></td>
-                            <td>{r.name}</td>
-                            <td>{r.email}</td>
-                            <td> {r.phone}</td>
                             <td>{r.date?.slice(0, 10)}</td>
                             <td>{r.time}</td>
                             <td>{r.guests}</td>
+                            <td>{r.status}</td>
                             <td>
                                 <button
                                     className="classic">
                                     Content
                                 </button>
                             </td>
-                            <td>{r.status}</td>
                             <td className="btn">
                                 <button
-                                    className='edit'>
-                                    Edit
-                                </button>
-                                <button
                                     className='remove'>
-                                    Remove
+                                    Cancel
                                 </button>
                             </td>
                         </tr>
-                    ))}
+                    )) : <span className='text-white'>Not Found</span>}
                 </tbody>
             </Table>
             <Pagination
                 href={`reservations?`}
-                currentPage={paginatedData.page}
-                pageCount={paginatedData.pageCount}
-                limit={paginatedData.limit}
-            />
+                currentPage={data?.page}
+                pageCount={data?.pageCount}
+                limit={data?.limit} />
         </>
     )
-
 }

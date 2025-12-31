@@ -3,6 +3,11 @@ import UserModal from "./user";
 
 const ReservationSchema = new mongoose.Schema(
     {
+        userID: {
+            type: mongoose.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
         name: {
             type: String,
             required: true,

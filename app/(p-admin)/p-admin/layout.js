@@ -3,7 +3,6 @@ import Sidebar from "@/components/modules/p-admin/sidebar";
 import { authAdmin } from "@/utils/auth";
 import { redirect } from "next/navigation";
 import RefreshAccessToken from "@/utils/refreshAccessToken";
-
 export default async function AdminPanelLayout({ children }) {
     const admin = await authAdmin()
     if (!admin) {
@@ -33,12 +32,17 @@ export default async function AdminPanelLayout({ children }) {
     );
 
 
-    return admin.status === "expired" ? (
-        <RefreshAccessToken
-            shouldRefresh={true}>{content}
-        </RefreshAccessToken>
-    ) : (content)
+    if (admin.status === "expired") {
+        return (
+            <RefreshAccessToken
+             shouldRefresh={true}>
+              {content}
+            </RefreshAccessToken>
+        );
+    }
+    return content;
 }
+
 
 
 

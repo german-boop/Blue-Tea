@@ -9,7 +9,7 @@ const publicApi = axios.create({
 publicApi.interceptors.response.use(
     (response) => response,
     (error) => {
-        const status = error.response?.status;        
+        const status = error.response?.status;
 
         if (!status) {
             toast.error("Network error or no response from server");
@@ -22,7 +22,7 @@ publicApi.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        if (status >= 400) {            
+        if (status >= 400) {
             manageError(status);
         }
 
@@ -31,6 +31,8 @@ publicApi.interceptors.response.use(
 );
 const privateApi = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
+    withCredentials: true,
+
 });
 
 privateApi.interceptors.response.use(

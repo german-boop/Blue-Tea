@@ -1,19 +1,23 @@
-import { authUser } from "@/utils/auth";
 import Dropdown from "@/utils/dropDown";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import styles from "@/components/modules/p-admin/sidebar.module.css"
 import RefreshAccessToken from "@/utils/refreshAccessToken";
 import { MdLogout } from "react-icons/md";
-
+import { authUser } from "@/utils/auth";
+import connectToDB from "@/db/db";
+import UserProvider from "@/utils/context/userProvider";
 export default async function UserPanelLayout({ children }) {
+    await connectToDB()
     const user = await authUser()
     if (!user) {
         redirect("/")
     }
+
+    const safeUser = JSON.parse(JSON.stringify(user));
     const content = (
         <div className="container-fluid py-5">
-            <div className="row">
+            <div className="row gap-5">
                 <div className="col-3">
                     <div className="d-flex align-items-center justify-content-between justify-content-lg-center">
                         <span className="text-white">WelCome To Your Dashboard</span>
@@ -21,49 +25,38 @@ export default async function UserPanelLayout({ children }) {
                     <div className="mt-5">
                         <ul className="list-unstyled">
                             <li className={`${styles.sidebar_item} ${styles.active}`}>
-                                <Link className={styles.sidebar_link} href="/p-admin">
+                                <Link className={styles.sidebar_link} href="/account">
                                     <i className="me-2 bi bi-grid-fill"></i>
                                     <span>Dashboard</span>
                                 </Link>
                             </li>
                             <Dropdown
                                 icon="bi-box-seam"
-                                title="Products"
+                                title="orders"
                                 items={[
-                                    { label: "All Products", href: "/p-admin/products" },
-                                    { label: "Create Product", href: "/p-admin/products/create" },
+                                    { label: "All Orders", href: "/account/orders" },
                                 ]}
                             />
                             <Dropdown
                                 icon="bi-chat-right-dots-fill"
-                                title="Menu"
+                                title="reservations"
                                 items={[
-                                    { label: "Menu Items", href: "/p-admin/menu" },
-                                    { label: "Create Menu Item", href: "/p-admin/menu/create" },
+                                    { label: "All Reservations", href: "/account/reservations" },
                                 ]}
                             />
+                                <Dropdown
+                                icon="bi-people-fill"
+                                title="comments"
+                                items={[
+                                    { label: "All comments", href: "/account/comments" }
+                                ]}/>
                             <Dropdown
                                 icon="bi-people-fill"
-                                title="Users"
+                                title="account-Detail"
                                 items={[
-                                    { label: "All Users", href: "/p-admin/users" },
-                                    { label: "Create New User", href: "/p-admin/users/create" },
-
+                                    { label: "Your Info", href: "/account/detail" }
                                 ]}
                             />
-                            <Dropdown
-                                icon="bi-chat-dots-fill"
-                                title="Comments"
-                                items={[
-                                    { label: "All Comments", href: "/p-admin/comments" },
-                                ]}
-                            />
-                            <li className={styles.sidebar_item}>
-                                <Link className={styles.sidebar_link} href="/admin/discounts">
-                                    <i className="me-2 bi bi-percent"></i>
-                                    <span>Discounts</span>
-                                </Link>
-                            </li>
                         </ul>
                     </div>
                     <div className="text-white d-flex gap-2 my-5 fs-5 align-items-center">
@@ -71,19 +64,25 @@ export default async function UserPanelLayout({ children }) {
                         EXIT
                     </div>
                 </div>
-                <div className="col-6">
+                <div
+                    className="col-8">
                     {children}
                 </div>
             </div>
         </div>
     );
-
-
-    return user.status === "expired" ? (
-        <RefreshAccessToken
-            shouldRefresh={true}>{content}
-        </RefreshAccessToken>
-    ) : (content)
+    return (
+        <UserProvider user={safeUser}>
+            {user.status === "expired" ? (
+                <RefreshAccessToken
+                    shouldRefresh={true}>
+                    {content}
+                </RefreshAccessToken>
+            ) : (
+                content
+            )}
+        </UserProvider>
+    );
 }
 
 

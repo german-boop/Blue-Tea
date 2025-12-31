@@ -8,7 +8,7 @@ export async function GET() {
   try {
     await connectToDB();
 
-    const cookiesStore = cookies();
+    const cookiesStore = cookies();    
     const tokenCookie = cookiesStore.get("refreshToken")?.value;
 
     if (!tokenCookie) {
@@ -32,7 +32,6 @@ export async function GET() {
     return NextResponse.json({ user }, { status: 200 });
 
   } catch (err) {
-    console.error(err);
     return NextResponse.json({ message: "UNKNOWN ERROR" }, { status: 500 });
   }
 }

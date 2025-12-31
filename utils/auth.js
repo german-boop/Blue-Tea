@@ -58,16 +58,16 @@ const authUser = async () => {
 
     const cookiesStore = await cookies()
     const token = cookiesStore.get("token")
-
-    if (!token) return { status: 401, user: null };
+    if (!token) return null
 
     const payloadToken = await verifyToken(token.value)
-    if (!payloadToken) return { status: 401, user: null };
+    if (!payloadToken) return { status: "expired" }
 
     user = await UserModal.findOne({ email: payloadToken.email })
-    if (!user) return { status: 403, user: null };
 
-    return { status: 200, user };
+    if (!user) return null
+
+    return user
 }
 
 const authAdmin = async () => {

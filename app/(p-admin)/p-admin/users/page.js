@@ -53,8 +53,7 @@ export default async function page({ searchParams }) {
                 href={`users?`}
                 currentPage={paginatedData.page}
                 pageCount={paginatedData.pageCount}
-                limit={paginatedData.limit} />
-            
+                limit={paginatedData.limit} />  
         </>
     )
 
