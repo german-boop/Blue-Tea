@@ -5,7 +5,8 @@ import { useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/scrollbar";
-import { Navigation, Scrollbar } from 'swiper/modules'
+import "swiper/css/grid";
+import { Navigation, Scrollbar, Grid } from 'swiper/modules'
 
 
 const Products = ({ products }) => {
@@ -17,27 +18,32 @@ const Products = ({ products }) => {
                 <div className="d-flex justify-content-end mb-5">
                     <button className="classic">More...</button>
                 </div>
-                {/* Navigation Buttons */}
+
                 <div className="navigation_buttons">
                     <button onClick={() => swiperRef.current?.slidePrev()} className="prevBtn">‹</button>
                     <button onClick={() => swiperRef.current?.slideNext()} className="nextBtn">›</button>
                 </div>
+
                 <div className="swiper-wrapper-custom">
                     <Swiper
                         onSwiper={(swiper) => { swiperRef.current = swiper }}
-                        modules={[Navigation, Scrollbar]}
-                        spaceBetween={20}
-                        loop
-                        slidesPerView={1}
+                        modules={[Navigation, Scrollbar, Grid]}
+                        spaceBetween={30}
+                        loop={true}
+                        grid={{
+                            rows: 2,
+                            fill: "row"
+                        }}
                         scrollbar={{ draggable: true }}
                         breakpoints={{
-                            640: { slidesPerView: 1 },
-                            768: { slidesPerView: 2 },
-                            1024: { slidesPerView: 5 },
+                            640: { slidesPerView: 1, grid: { rows: 2 } },
+                            768: { slidesPerView: 2, grid: { rows: 2 } },
+                            1024: { slidesPerView: 5, grid: { rows: 2 } },
                         }}
-                        className="mySwiper">
+                        className="mySwiper"
+                    >
                         {products.map((item, index) => (
-                            <SwiperSlide key={index + 1}>
+                            <SwiperSlide key={item._id || index}>
                                 <Product
                                     id={item._id}
                                     name={item.name}

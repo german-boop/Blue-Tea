@@ -28,8 +28,7 @@ export default async function Navbar() {
         }
     })
 
-    const favoritesCount = await WishlistModal.countDocuments({})
-
+    const favoritesCount = await WishlistModal.countDocuments({user:user.id})
 
     return (
         <div className="container-fluid bg-white sticky-top">
@@ -60,7 +59,7 @@ export default async function Navbar() {
                                         {item.children.map((cat, index) => (
                                             <Link
                                                 key={index + 1}
-                                                href="feature.html"
+                                                href={`/products?category=${cat.name}`}
                                                 className="dropdown-item"
                                             >
                                                 {cat.name}

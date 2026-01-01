@@ -2,6 +2,7 @@ import WishlistModal from '@/model/wishList';
 import { getMe } from '@/utils/auth';
 import { paginate } from '@/utils/helper';
 import Product from '@/components/modules/product/product';
+import WishList from '@/components/template/wishList/wishList';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
@@ -49,34 +50,11 @@ export default async function page({ searchParams }) {
           <div className='header'>
             <h1>Favorites List</h1>
           </div>
-          <div className='container'>
-            <div className='row gap-1'>
-              {
-                paginatedData.data.map((w, index) => (
-                  w.products.map((item, index) => (
-                    <Product
-                      key={index + 1}
-                      id={item._id}
-                      name={item.name}
-                      img={item.img}
-                      shortDescription={item.shortDescription}
-                      score={item.score}
-                      price={item.price}
-                    />
-
-                  ))
-                ))
-              }
-            </div>
-            {paginatedData.nextCursor && (
-              <div className="mt-4 text-center">
-                <Link
-                  className='classic'
-                  href={`/favorites?cursor=${paginatedData.nextCursor}&limit=${paginatedData.limit}`}>
-                  Load more
-                </Link>
-              </div>
-            )}
+          <div className='container-fluid'>
+            <WishList
+              nextCursor={paginatedData.nextCursor}
+              limit={paginatedData.limit}
+              data={JSON.parse(JSON.stringify(paginatedData.data))} />
           </div>
 
         </div>
