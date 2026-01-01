@@ -3,8 +3,7 @@
     max-width: 300px;
     width: 250px;
     height: 300px;
-    overflow: hidden;
-    margin-bottom: 3rem;
+    margin: 3rem 1rem;
 }
 
 .img_container {
@@ -32,7 +31,7 @@
     justify-content: center;
     align-items: center;
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.2s ease;
     background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.10), var(--brown-light));
     padding: 1rem;
 
@@ -47,9 +46,9 @@
 }
 
 .img_container:hover+.info_container {
-    transform: translateY(400px);
-}
+    opacity: 0;
 
+}
 
 .icons svg {
     cursor: pointer;
@@ -124,12 +123,16 @@
     border: 1px solid var(--brown-light);
     position: absolute;
     border-radius: 100px 100px 0 100px;
-    bottom: 120px;
+    bottom: 110px;
     transition: all 700ms ease-out;
     z-index: 2;
     left: -15px;
-    height: 120px;
-    width: 220px;
+    height: 165px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    width: 250px;
     text-align: center;
     background-color: var(--brown-light);
     box-shadow: 3px 10px 30px rgba(3, 30, 1, 0.2);

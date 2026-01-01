@@ -248,8 +248,7 @@ section {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: var(--brown-light);
-
+  margin-bottom: 2rem;
 }
 
 .main-swiper .swiper-slide {

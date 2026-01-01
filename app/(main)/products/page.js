@@ -2,10 +2,9 @@ import CategoryModel from "@/model/category";
 import ProductModal from "@/model/product";
 import connectToDB from "@/db/db";
 import { paginate } from "@/utils/helper";
-import Product from "@/components/modules/product/product";
-import Link from "next/link";
+import ProductsList from "@/components/template/products/productsList";
 export async function generateMetadata({ searchParams }) {
-    const categoryName = searchParams.category || "Products";
+    const categoryName = await searchParams.category || "Products";
     await connectToDB();
     const category = categoryName ? await CategoryModel.findOne({ name: categoryName }) : null;
 
@@ -34,53 +33,120 @@ export async function generateMetadata({ searchParams }) {
             images: category?.img ? [category.img] : [],
         },
     };
-} export default async function page({ searchParams }) {
-    connectToDB()
-    const params = await searchParams
-    const categoryName = await params.category
-    let categoryId;
+}
 
+export default async function page({ searchParams }) {
+    await connectToDB();
+    const params = await searchParams;
+    const categoryName = await params.category;
+
+    let categoryId;
     if (categoryName) {
-        const category = await CategoryModel.findOne({ name: categoryName })
-        if (category) categoryId = category._id;
+        const category = await CategoryModel.findOne({ name: categoryName });
+        category ? (categoryId = category._id) : null;
     }
 
-    const paginatedData = await paginate(ProductModal, params, categoryId, null, true, false)
-
+    const paginatedData = await paginate(
+        ProductModal,
+        params,
+        categoryId ? { category: categoryId } : null,
+        null,
+        true,
+        false
+    );
 
     return (
-        <>
-            <div className="py-5">
-                <div>
-                    <h3 className="header">{categoryName}
-                        <span> positive effect on the body</span></h3>
-                </div>
-                <div className="container">
-                    <div className="row">
-                        {paginatedData.data.map((item, index) => (
-                            <Product
-                                key={index + 1}
-                                id={item._id}
-                                name={item.name}
-                                img={item.img}
-                                shortDescription={item.shortDescription}
-                                score={item.score}
-                                price={item.price}
-                            />
-                        ))}
+        <div className="py-3">
+            <h3 className='header'>
+                {categoryName} <span>positive effect on the body</span>
+            </h3>
+            <div className="container-fluid">
+                <div className="row">
+                    {/* Sticky Filter Sidebar */}
+                    <div className="col-md-3">
+                        <div
+                            className="position-sticky top-0 vh-100 overflow-auto p-3 text-white border-end"
+                            style={{ zIndex: 10 }}>
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h4 className="h5 m-0">Filters</h4>
+                                <div className="d-flex gap-2">
+                                    <button type="button" className="classic">
+                                        Reset
+                                    </button>
+                                    <button type="button" className="classic">
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Name Search */}
+                            <div className="mb-5">
+                                <label htmlFor="nameSearch" className="form-label small fw-medium">
+                                    Search by name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="nameSearch"
+                                    placeholder="Enter name..."
+                                    className="form-control form-control-sm"
+                                />
+                            </div>
+
+                            {/* SKU Search */}
+                            <div className="mb-5">
+                                <label htmlFor="skuSearch" className="form-label small fw-medium">
+                                    Search by SKU (Product Code)
+                                </label>
+                                <input
+                                    type="text"
+                                    id="skuSearch"
+                                    placeholder="Enter SKU..."
+                                    className="form-control form-control-sm"
+                                />
+                            </div>
+
+                            {/* Category Filter */}
+                            <div className="mb-5">
+                                <label className="form-label fs-5 fw-bold">Category</label>
+                                <div className="d-flex flex-wrap gap-2">
+                                    {["Coffee", "Herbal Teas", "Organic Snacks"].map((item) => (
+                                        <div key={item} className="form-check">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id={`category-${item}`}
+                                            />
+                                            <label
+                                                className="form-check-label text-lowercase"
+                                                htmlFor={`category-${item}`}>
+                                                {item}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Price Filter */}
+                            <div className="mb-5">
+                                <label className="form-label small fw-medium">Price (EUR)</label>
+                                <div className="d-flex gap-2 mb-2">
+                                    <input type="number" className="form-control form-control-sm" placeholder="Min" />
+                                    <span className="align-self-center">-</span>
+                                    <input type="number" className="form-control form-control-sm" placeholder="Max" />
+                                </div>
+                                <input type="range" className="form-range" />
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Products List */}
+                    <ProductsList
+                        nextCursor={paginatedData.nextCursor}
+                        limit={paginatedData.limit}
+                        categoryName={categoryName}
+                        data={JSON.parse(JSON.stringify(paginatedData.data))} />
                 </div>
             </div>
-            {paginatedData.nextCursor && (
-                <div className="mt-4 text-center">
-                    <Link
-                        className='classic'
-                        href={`/products?category=${categoryName}&cursor=${paginatedData.nextCursor}&limit=${paginatedData.limit}`}>
-                        Load more
-                    </Link>
-                </div>
-            )}
-        </>
-
-    )
+        </div>
+    );
 }
